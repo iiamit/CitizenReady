@@ -31,6 +31,10 @@
   --nav-height: 56px;
   --max-content: 480px;
   --max-desktop: 960px;
+
+  /* Flashcard-specific tokens */
+  --color-card-back-bg:  #EEF3F8;
+  --color-answer-text:   #1A3A5C;
 }
 
 /* Dark mode */
@@ -45,6 +49,8 @@
     --color-neutral-100: #0F1F30;
     --color-neutral-200: #2A4060;
     --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --color-card-back-bg:  #1E3452;
+    --color-answer-text:   #90C3F0;
   }
 }
 :root.theme-dark {
@@ -57,6 +63,8 @@
   --color-neutral-100: #0F1F30;
   --color-neutral-200: #2A4060;
   --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --color-card-back-bg:  #1E3452;
+  --color-answer-text:   #90C3F0;
 }
 
 /* ===== Reset & Base ===== */
@@ -293,7 +301,7 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
   perspective: 1000px;
   width: 100%;
   max-width: 480px;
-  min-height: 240px;
+  min-height: 220px;
   margin: 0 auto;
   cursor: pointer;
 }
@@ -301,7 +309,7 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
 
 .flashcard {
   width: 100%;
-  min-height: 240px;
+  min-height: 220px;
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.4s ease-in-out;
@@ -312,7 +320,7 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
 .flashcard-face {
   position: absolute;
   top: 0; left: 0; right: 0;
-  min-height: 240px;
+  min-height: 220px;
   border-radius: var(--radius);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -326,10 +334,11 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
   box-shadow: var(--shadow);
 }
 .flashcard-back {
-  background: #EEF3F8;
+  background: var(--color-card-back-bg);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow);
   transform: rotateY(180deg);
+  color: var(--color-text);
 }
 
 .card-meta {
@@ -350,7 +359,7 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
 .flashcard-answer {
   font-size: 20px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-answer-text);
   margin-bottom: 12px;
   line-height: 1.4;
 }
@@ -369,10 +378,16 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
   padding-top: 12px;
 }
 
+.rating-buttons-wrap {
+  position: sticky;
+  bottom: calc(var(--nav-height) + 8px);
+  background: var(--color-bg);
+  padding: 12px 0 4px;
+  z-index: 5;
+}
 .rating-buttons {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
   width: 100%;
   max-width: 480px;
   margin-left: auto;

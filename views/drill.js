@@ -112,7 +112,7 @@ export async function render(el) {
           </div>
         </div>
 
-        <div id="rating-buttons" style="display:none;">
+        <div class="rating-buttons-wrap" id="rating-buttons" style="display:none;">
           <div class="rating-buttons">
             <button class="btn btn-error" id="missed-btn" aria-label="Missed it">Missed it</button>
             <button class="btn btn-warning" id="almost-btn" aria-label="Almost">Almost</button>
@@ -126,12 +126,24 @@ export async function render(el) {
     const card = el.querySelector('#flashcard');
     const ratingButtons = el.querySelector('#rating-buttons');
 
+    // Size the container to fit whichever face is taller
+    function syncCardHeight() {
+      const front = card.querySelector('.flashcard-front');
+      const back  = card.querySelector('.flashcard-back');
+      if (!front || !back) return;
+      const h = Math.max(front.scrollHeight, back.scrollHeight, 220);
+      card.style.minHeight  = h + 'px';
+      scene.style.minHeight = h + 'px';
+    }
+    requestAnimationFrame(syncCardHeight);
+
     function flip() {
       if (isFlipped) return;
       isFlipped = true;
       card.classList.add('flipped');
       ratingButtons.style.display = 'block';
       scene.setAttribute('aria-label', 'Flashcard flipped — rate yourself using the buttons below');
+      requestAnimationFrame(syncCardHeight);
     }
 
     scene.addEventListener('click', flip);
