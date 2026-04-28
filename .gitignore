@@ -1,0 +1,17 @@
+# Claude Code session data
+.claude/
+
+# Source documents (not part of the app)
+*.pdf
+citizenship-app-spec.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+
+# Empty placeholder dirs
+updates/
