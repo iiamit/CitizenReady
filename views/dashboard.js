@@ -1,8 +1,9 @@
-import { getSetting } from '../utils/db.js';
+import { getSetting, putSetting } from '../utils/db.js';
 import { computeReadinessScore, readinessBand, getStreakDays, getDueCardCount } from '../utils/readiness.js';
 import { getNextCategory, CATEGORIES } from '../utils/scheduler.js';
 import { getAllQuestions, getAllCategories } from '../utils/db.js';
 import { getQuestionsForCategory } from '../utils/storage.js';
+import { isWeb } from '../utils/platform.js';
 
 export async function render(el) {
   const settings = (await getSetting('setup')) ?? {};
@@ -45,7 +46,24 @@ export async function render(el) {
     }
   }
 
+  // PWA install prompt (web only, not shown on Capacitor)
+  const installDismissed = await getSetting('pwa_install_dismissed');
+  const showInstallPrompt = isWeb() && window._deferredInstallPrompt && !installDismissed;
+
   el.innerHTML = `
+    ${showInstallPrompt ? `
+    <div class="install-banner fade-in" id="install-banner">
+      <div style="font-size:28px;" aria-hidden="true">📱</div>
+      <div class="install-banner-text">
+        <div class="install-banner-title">Add CitizenReady to your home screen</div>
+        <div class="install-banner-sub">Study offline, anytime.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+        <button class="btn btn-primary" id="install-cta" style="padding:6px 14px;font-size:13px;">Install</button>
+        <button class="btn btn-ghost" id="install-dismiss" style="padding:4px 8px;font-size:12px;">Not now</button>
+      </div>
+    </div>
+    ` : ''}
     <div class="dashboard-header fade-in stagger-1">
       <div class="streak-block" aria-label="${streak} day study streak">
         <span class="streak-icon" aria-hidden="true">🔥</span>
@@ -125,6 +143,20 @@ export async function render(el) {
   });
   el.querySelector('#start-drill-btn')?.addEventListener('click', () => {
     window.location.hash = '#drill';
+  });
+
+  // PWA install handlers
+  el.querySelector('#install-cta')?.addEventListener('click', async () => {
+    const prompt = window._deferredInstallPrompt;
+    if (!prompt) return;
+    prompt.prompt();
+    const { outcome } = await prompt.userChoice;
+    if (outcome === 'accepted') window._deferredInstallPrompt = null;
+    el.querySelector('#install-banner')?.remove();
+  });
+  el.querySelector('#install-dismiss')?.addEventListener('click', async () => {
+    await putSetting('pwa_install_dismissed', true);
+    el.querySelector('#install-banner')?.remove();
   });
 
   // Animate gauge arc

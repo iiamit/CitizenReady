@@ -1,6 +1,8 @@
 import { openDB, getSetting, putSetting } from './utils/db.js';
 import { loadMergedData } from './utils/storage.js';
 import { checkForUpdates, updateAppliedThisSession } from './utils/updater.js';
+import { isCapacitor, isAndroid } from './utils/platform.js';
+import { loadLocale, getCurrentLocale } from './utils/i18n.js';
 import { render as renderOnboarding } from './views/onboarding.js';
 import { render as renderDashboard } from './views/dashboard.js';
 import { render as renderLesson } from './views/lesson.js';
@@ -125,21 +127,64 @@ async function route() {
 
 // ── Startup ─────────────────────────────────────────────────────────────────
 async function init() {
+  // Load saved locale before any rendering
+  await loadLocale(getCurrentLocale());
+
   try {
     await openDB();
     await loadMergedData();
-    // Non-blocking update check
     checkForUpdates().catch(() => {});
   } catch (e) {
     console.error('Startup error:', e);
   }
+
+  // Capacitor native setup
+  if (isCapacitor()) {
+    import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+      StatusBar.setStyle({ style: Style.Dark });
+      if (isAndroid()) StatusBar.setBackgroundColor({ color: '#1A3A5C' });
+    }).catch(() => {});
+
+    if (isAndroid()) {
+      import('@capacitor/app').then(({ App }) => {
+        App.addListener('backButton', () => {
+          const h = window.location.hash;
+          if (h && h !== '#dashboard') history.back();
+          else App.exitApp();
+        });
+      }).catch(() => {});
+    }
+  }
+
+  // PWA install prompt capture
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    window._deferredInstallPrompt = e;
+  });
+
+  // Offline/online indicator
+  function showOfflineBanner() {
+    if (document.getElementById('offline-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'offline-banner';
+    banner.className = 'notification-banner';
+    banner.style.cssText = 'background:#E65100;position:fixed;top:0;left:0;right:0;z-index:9999;border-radius:0;';
+    banner.textContent = "You're offline — your progress is saved locally.";
+    document.body.prepend(banner);
+  }
+  function hideOfflineBanner() {
+    document.getElementById('offline-banner')?.remove();
+    checkForUpdates().catch(() => {});
+  }
+  window.addEventListener('offline', showOfflineBanner);
+  window.addEventListener('online', hideOfflineBanner);
+  if (!navigator.onLine) showOfflineBanner();
 
   document.getElementById('loading-shell')?.remove();
   await route();
 }
 
 window.addEventListener('hashchange', route);
-// type="module" scripts run after DOMContentLoaded, so the DOM is already ready here
 init();
 
 // ── SVG icons ────────────────────────────────────────────────────────────────

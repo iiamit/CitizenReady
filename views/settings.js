@@ -3,11 +3,16 @@ import { STATE_DATA } from '../data/state-data.js';
 import { checkForUpdates, updateAppliedThisSession, lastReleaseNotes } from '../utils/updater.js';
 import { getBundledVersions } from '../utils/storage.js';
 import { MANIFEST } from '../data/content-manifest.js';
+import { isCapacitor } from '../utils/platform.js';
+import { getPermissionStatus, requestPermission, scheduleStudyReminder, cancelAllReminders } from '../utils/notifications.js';
+import { isCloudEnabled, getCurrentUser } from '../utils/sync.js';
+import { setLocale, getCurrentLocale } from '../utils/i18n.js';
 
 export async function render(el) {
   const settings = (await getSetting('setup')) ?? {};
   const theme = (await getSetting('theme')) ?? 'system';
   const versions = getBundledVersions();
+  const currentLocale = getCurrentLocale();
 
   el.innerHTML = `
     <div style="padding:16px 0 60px;">
@@ -80,6 +85,55 @@ export async function render(el) {
             <option value="light" ${theme === 'light' ? 'selected' : ''}>Light</option>
             <option value="dark" ${theme === 'dark' ? 'selected' : ''}>Dark</option>
           </select>
+        </div>
+      </div>
+
+      <!-- Language -->
+      <div class="settings-section">
+        <div class="settings-section-title">Language</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <div class="settings-row-name">Language / Idioma</div>
+            <div class="settings-row-desc">App interface language</div>
+          </div>
+          <select id="language-select" class="settings-select" aria-label="Select language">
+            <option value="en" ${currentLocale === 'en' ? 'selected' : ''}>English</option>
+            <option value="es" ${currentLocale === 'es' ? 'selected' : ''}>Español</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Study Reminders (Capacitor only) -->
+      ${isCapacitor() ? `
+      <div class="settings-section" id="reminders-section">
+        <div class="settings-section-title">Study Reminders</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <div class="settings-row-name">Daily reminder</div>
+            <div class="settings-row-desc">Get a notification to study each day</div>
+          </div>
+          <label class="toggle" aria-label="Toggle daily reminder">
+            <input type="checkbox" id="reminder-toggle" ${(settings.reminderEnabled ?? false) ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="reminder-time-row" class="settings-row" style="${(settings.reminderEnabled ?? false) ? '' : 'display:none;'}">
+          <div class="settings-row-label">
+            <div class="settings-row-name">Reminder time</div>
+          </div>
+          <input type="time" id="reminder-time" class="settings-input" value="${settings.reminderTime ?? '19:00'}" aria-label="Reminder time">
+        </div>
+        <div id="reminder-permission-note" style="display:none;padding:8px 16px 12px;font-size:12px;color:var(--color-warning);">
+          Enable notifications in your device settings to use this feature.
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- Account -->
+      <div class="settings-section">
+        <div class="settings-section-title">Account</div>
+        <div id="account-section" style="padding:12px 16px;">
+          ${isCloudEnabled() ? '<div style="color:var(--color-text-secondary);font-size:13px;">Loading…</div>' : '<div style="font-size:13px;color:var(--color-text-secondary);">Cloud sync not configured. See v2-plan.md for Supabase setup instructions.</div>'}
         </div>
       </div>
 
@@ -219,10 +273,86 @@ export async function render(el) {
     btn.textContent = 'Check for Updates';
   });
 
+  // Language
+  el.querySelector('#language-select')?.addEventListener('change', async e => {
+    await setLocale(e.target.value);
+    window.location.reload(); // reload to re-render all strings
+  });
+
+  // Reminder toggle (Capacitor only)
+  if (isCapacitor()) {
+    const reminderToggle = el.querySelector('#reminder-toggle');
+    const reminderTimeRow = el.querySelector('#reminder-time-row');
+    const reminderPermNote = el.querySelector('#reminder-permission-note');
+    const reminderTimeInput = el.querySelector('#reminder-time');
+
+    reminderToggle?.addEventListener('change', async e => {
+      const enabled = e.target.checked;
+      if (enabled) {
+        const perm = await getPermissionStatus();
+        if (perm === 'denied') {
+          reminderPermNote.style.display = 'block';
+          reminderToggle.checked = false;
+          return;
+        }
+        const granted = perm === 'granted' || await requestPermission();
+        if (!granted) {
+          reminderPermNote.style.display = 'block';
+          reminderToggle.checked = false;
+          return;
+        }
+        const [hour, minute] = (reminderTimeInput.value ?? '19:00').split(':').map(Number);
+        await scheduleStudyReminder(hour, minute);
+        reminderTimeRow.style.display = '';
+      } else {
+        await cancelAllReminders();
+        reminderTimeRow.style.display = 'none';
+      }
+      const newSettings = { ...(await getSetting('setup') ?? {}), reminderEnabled: enabled };
+      await putSetting('setup', newSettings);
+    });
+
+    reminderTimeInput?.addEventListener('change', async e => {
+      const [hour, minute] = e.target.value.split(':').map(Number);
+      await scheduleStudyReminder(hour, minute);
+      const newSettings = { ...(await getSetting('setup') ?? {}), reminderTime: e.target.value };
+      await putSetting('setup', newSettings);
+    });
+  }
+
+  // Account section (async load)
+  if (isCloudEnabled()) {
+    const accountSection = el.querySelector('#account-section');
+    if (accountSection) {
+      const { render: renderAuth } = await import('./auth.js');
+      await renderAuth(accountSection);
+    }
+  }
+
   // Export
   el.querySelector('#export-btn').addEventListener('click', async () => {
     const data = await exportAllData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const jsonStr = JSON.stringify(data, null, 2);
+
+    if (isCapacitor()) {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const { Share } = await import('@capacitor/share');
+      const filename = `citizenready-backup-${new Date().toISOString().slice(0,10)}.json`;
+      const file = await Filesystem.writeFile({
+        path: filename,
+        data: jsonStr,
+        directory: Directory.Documents,
+        encoding: 'utf8'
+      });
+      await Share.share({
+        title: 'CitizenReady Backup',
+        text: 'My CitizenReady study progress backup',
+        url: file.uri
+      });
+      return;
+    }
+
+    const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

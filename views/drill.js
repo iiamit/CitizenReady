@@ -1,7 +1,9 @@
 import { getSetting, getQuestion as getDBQuestion, putQuestion, getAllQuestions, logSession } from '../utils/db.js';
 import { getQuestions, resolveAnswer } from '../utils/storage.js';
 import { applyRating, defaultRecord, isDue } from '../utils/srs.js';
-import { CATEGORIES } from '../utils/scheduler.js';
+import { CATEGORIES, weightedCardQueue } from '../utils/scheduler.js';
+import { isCapacitor } from '../utils/platform.js';
+import { getAudioUrl } from '../data/audio-manifest.js';
 
 const SESSION_TARGET = 20; // max cards per session
 let touchStartX = 0, touchStartY = 0;
@@ -38,7 +40,9 @@ export async function render(el) {
   const updatedCards = introduced.filter(q => qMap[q.id]?.answerUpdatedFlag);
   const dueCards = introduced.filter(q => !qMap[q.id]?.answerUpdatedFlag && (qMap[q.id]?.nextReviewDate ?? '1970-01-01') <= today);
 
-  let queue = [...updatedCards, ...dueCards].slice(0, SESSION_TARGET);
+  // Apply weighted ordering: harder/more overdue cards surface first
+  const sortedDue = weightedCardQueue(dueCards, qMap);
+  let queue = [...updatedCards, ...sortedDue].slice(0, SESSION_TARGET);
 
   if (!queue.length) {
     el.innerHTML = `
@@ -95,6 +99,9 @@ export async function render(el) {
                 <span style="display:flex;align-items:center;gap:6px;">
                   ${q.starred65_20 ? '<span class="star-badge" aria-label="Starred">★</span>' : ''}
                   <span class="label">Q.${String(q.number).padStart(3,'0')}</span>
+                  ${getAudioUrl(q.number) ? `<button class="audio-btn" id="audio-btn" aria-label="Play question audio" title="Play audio" onclick="event.stopPropagation()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>` : ''}
                 </span>
               </div>
               <div class="flashcard-question">${q.question}</div>
@@ -151,6 +158,29 @@ export async function render(el) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
     });
 
+    // Audio button
+    const audioBtn = el.querySelector('#audio-btn');
+    let audioEl = null;
+    if (audioBtn) {
+      const audioUrl = getAudioUrl(q.number);
+      audioBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!audioEl) {
+          audioEl = new Audio(audioUrl);
+          audioEl.addEventListener('ended', () => { audioBtn.classList.remove('playing'); audioBtn.querySelector('polygon').setAttribute('points', '5 3 19 12 5 21 5 3'); });
+        }
+        if (audioEl.paused) {
+          audioEl.play().catch(() => {});
+          audioBtn.classList.add('playing');
+          audioBtn.querySelector('polygon').setAttribute('points', '6 4 6 20 M18 4 18 20'); // pause icon hint
+        } else {
+          audioEl.pause();
+          audioEl.currentTime = 0;
+          audioBtn.classList.remove('playing');
+        }
+      });
+    }
+
     // Swipe support
     scene.addEventListener('touchstart', e => {
       touchStartX = e.touches[0].clientX;
@@ -169,6 +199,15 @@ export async function render(el) {
     }, { passive: true });
 
     async function rate(rating) {
+      // Haptic feedback on Capacitor
+      if (isCapacitor()) {
+        import('@capacitor/haptics').then(({ Haptics, ImpactStyle, NotificationType }) => {
+          if (rating === 'gotit') Haptics.impact({ style: ImpactStyle.Light });
+          else if (rating === 'almost') Haptics.impact({ style: ImpactStyle.Medium });
+          else Haptics.notification({ type: NotificationType.Warning });
+        }).catch(() => {});
+      }
+
       sessionResults[rating]++;
       const dbRec = qMap[q.id] ?? defaultRecord(q.id);
       const updated = applyRating(dbRec, rating);
@@ -213,9 +252,8 @@ export async function render(el) {
 
     const missedQs = [...missedThisSession].map(id => queue.find(q => q.id === id)).filter(Boolean);
 
-    // Confetti for good sessions
     if (correctPct >= 80 && reviewed >= 5) {
-      import('https://cdn.jsdelivr.net/npm/canvas-confetti@1/dist/confetti.module.mjs')
+      import('canvas-confetti')
         .then(m => { m.default({ particleCount: 60, spread: 60, colors: ['#C8102E','#FFFFFF','#1A3A5C'] }); })
         .catch(() => {});
     }

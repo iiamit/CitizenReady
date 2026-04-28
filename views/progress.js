@@ -2,6 +2,7 @@ import { getAllQuestions, getAllCategories } from '../utils/db.js';
 import { getQuestionsForCategory } from '../utils/storage.js';
 import { CATEGORIES, computeMastery } from '../utils/scheduler.js';
 import { computeReadinessScore, readinessBand } from '../utils/readiness.js';
+import { shareScoreCard } from '../utils/scorecard.js';
 
 export async function render(el) {
   const [dbQuestions, dbCategories] = await Promise.all([
@@ -62,6 +63,9 @@ export async function render(el) {
             </div>
           </div>
         </div>
+        ${score > 0 ? `<button class="btn btn-secondary" id="share-score-btn" style="width:100%;margin-top:12px;">
+          Share My Score 📤
+        </button>` : ''}
       </div>
 
       <h2 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px;">Categories</h2>
@@ -85,6 +89,20 @@ export async function render(el) {
       ` : ''}
     </div>
   `;
+
+  // Share score card
+  el.querySelector('#share-score-btn')?.addEventListener('click', async () => {
+    const btn = el.querySelector('#share-score-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    try {
+      await shareScoreCard(score, catStats.map(s => ({ name: s.cat.name, mastery: s.mastery })));
+    } catch (e) {
+      alert('Could not share score card. Please try again.');
+    }
+    btn.disabled = false;
+    btn.innerHTML = 'Share My Score 📤';
+  });
 
   el.querySelectorAll('.cat-expand-btn').forEach(btn => {
     btn.addEventListener('click', () => {

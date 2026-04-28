@@ -2,9 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>CitizenReady — US Naturalization Test Prep</title>
   <meta name="description" content="Prepare for the US naturalization civics test with personalized lessons and spaced-repetition flashcards.">
+
+  <!-- PWA / Mobile -->
+  <meta name="theme-color" content="#1A3A5C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CitizenReady">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 
   <!-- Critical CSS inlined for fast first paint -->
   <style>
@@ -35,10 +44,7 @@
     </div>
   </div>
 
-  <!-- idb library for IndexedDB -->
-  <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
-
-  <!-- App entry point -->
+  <!-- App entry point (idb now loaded via npm in app.js) -->
   <script type="module" src="app.js"></script>
 </body>
 </html>

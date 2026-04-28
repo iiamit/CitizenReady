@@ -1,3 +1,5 @@
+import { openDB as _openDB } from 'idb';
+
 const DB_NAME = 'citizenready_db';
 const DB_VERSION = 1;
 
@@ -5,7 +7,7 @@ let _db = null;
 
 export async function openDB() {
   if (_db) return _db;
-  _db = await idb.openDB(DB_NAME, DB_VERSION, {
+  _db = await _openDB(DB_NAME, DB_VERSION, {
     upgrade(db) {
       if (!db.objectStoreNames.contains('settings')) {
         db.createObjectStore('settings', { keyPath: 'key' });

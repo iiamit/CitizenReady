@@ -1,5 +1,6 @@
 import { getContentOverride, putContentOverride, getSetting, putSetting } from './db.js';
 import { MANIFEST } from '../data/content-manifest.js';
+import { isOnline } from './platform.js';
 
 const UPDATE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const FETCH_TIMEOUT_MS = 5000;
@@ -29,6 +30,8 @@ export let lastReleaseNotes = '';
 
 export async function checkForUpdates(force = false) {
   try {
+    if (!await isOnline()) return;
+
     const override = await getContentOverride('lastUpdateCheck');
     const lastCheck = override?.value ?? null;
 

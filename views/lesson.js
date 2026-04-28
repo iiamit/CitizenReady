@@ -4,6 +4,7 @@ import { CATEGORIES, ensureCategoryRecord, computeMastery } from '../utils/sched
 import { defaultRecord } from '../utils/srs.js';
 import { getAllQuestions } from '../utils/db.js';
 import { getVisual } from '../data/visuals.js';
+import { getAudioUrl } from '../data/audio-manifest.js';
 
 const KC_QUESTION_COUNT = 4;
 
@@ -104,6 +105,9 @@ export async function render(el, categoryId) {
             <span style="display:flex;align-items:center;gap:6px;">
               ${q.starred65_20 ? '<span class="star-badge" aria-label="Starred for 65/20 exemption" title="Starred for 65/20 exemption">★</span>' : ''}
               <span class="label">Q.${String(q.number).padStart(3,'0')}</span>
+              ${getAudioUrl(q.number) ? `<button class="audio-btn" id="lesson-audio-btn" aria-label="Play question audio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play
+              </button>` : ''}
             </span>
           </div>
 
@@ -135,6 +139,32 @@ export async function render(el, categoryId) {
         </div>
       </div>
     `;
+
+    // Audio player for learning card
+    const lessonAudioBtn = el.querySelector('#lesson-audio-btn');
+    if (lessonAudioBtn) {
+      const audioUrl = getAudioUrl(q.number);
+      let audioEl = null;
+      lessonAudioBtn.addEventListener('click', () => {
+        if (!audioEl) {
+          audioEl = new Audio(audioUrl);
+          audioEl.addEventListener('ended', () => {
+            lessonAudioBtn.classList.remove('playing');
+            lessonAudioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play`;
+          });
+        }
+        if (audioEl.paused) {
+          audioEl.play().catch(() => {});
+          lessonAudioBtn.classList.add('playing');
+          lessonAudioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>Pause`;
+        } else {
+          audioEl.pause();
+          audioEl.currentTime = 0;
+          lessonAudioBtn.classList.remove('playing');
+          lessonAudioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play`;
+        }
+      });
+    }
 
     el.querySelector('#next-card-btn').addEventListener('click', async () => {
       // Mark question introduced
@@ -335,9 +365,8 @@ export async function render(el, categoryId) {
       window.location.hash = '#drill';
     });
 
-    // Lazy load confetti
-    if (pct >= 75 && !window.confetti) {
-      import('https://cdn.jsdelivr.net/npm/canvas-confetti@1/dist/confetti.module.mjs')
+    if (pct >= 75) {
+      import('canvas-confetti')
         .then(m => { m.default({ particleCount: 80, spread: 70, colors: ['#C8102E','#FFFFFF','#1A3A5C'] }); })
         .catch(() => {});
     }

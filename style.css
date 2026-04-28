@@ -35,6 +35,12 @@
   /* Flashcard-specific tokens */
   --color-card-back-bg:  #EEF3F8;
   --color-answer-text:   #1A3A5C;
+
+  /* Safe area insets (Capacitor / notched phones) */
+  --safe-area-top:    env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left:   env(safe-area-inset-left, 0px);
+  --safe-area-right:  env(safe-area-inset-right, 0px);
 }
 
 /* Dark mode */
@@ -81,7 +87,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-#app-root { min-height: 100vh; display: flex; flex-direction: column; }
+#app-root { min-height: 100vh; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
 
 h1, h2, h3 { font-family: var(--font-display); color: var(--color-heading); line-height: 1.2; }
 
@@ -116,7 +122,7 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
 .page {
   flex: 1;
   padding: 0 16px;
-  padding-bottom: calc(var(--nav-height) + 16px);
+  padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 16px);
   max-width: var(--max-content);
   margin: 0 auto;
   width: 100%;
@@ -193,7 +199,8 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  height: var(--nav-height);
+  height: calc(var(--nav-height) + var(--safe-area-bottom));
+  padding-bottom: var(--safe-area-bottom);
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
   display: flex;
@@ -752,3 +759,38 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
   font-size: 14px;
   font-weight: 500;
 }
+
+/* ===== Audio button ===== */
+.audio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.audio-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.audio-btn.playing { color: var(--color-accent); border-color: var(--color-accent); }
+.audio-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ===== PWA install banner ===== */
+.install-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+.install-banner-text { flex: 1; }
+.install-banner-title { font-weight: 700; font-size: 14px; }
+.install-banner-sub { font-size: 12px; color: var(--color-text-secondary); }
+

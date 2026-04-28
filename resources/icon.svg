@@ -1,0 +1,20 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="200" fill="#1A3A5C"/>
+
+  <!-- Shield shape -->
+  <path d="M512 120 L780 220 L780 540 C780 700 660 820 512 900 C364 820 244 700 244 540 L244 220 Z"
+        fill="none" stroke="white" stroke-width="28" stroke-linejoin="round" opacity="0.25"/>
+
+  <!-- CR monogram -->
+  <!-- C -->
+  <path d="M330 380 C330 320 370 280 430 280 L480 280 L480 340 L435 340 C400 340 390 360 390 395 L390 470 L390 475 L390 545 L390 550 C390 585 400 605 435 605 L480 605 L480 665 L430 665 C370 665 330 625 330 565 Z"
+        fill="white"/>
+  <!-- R -->
+  <path d="M520 280 L600 280 C655 280 695 315 695 375 C695 415 675 445 645 460 L700 665 L635 665 L585 470 L580 470 L580 665 L520 665 Z M580 340 L580 415 L600 415 C625 415 635 400 635 378 C635 356 625 340 600 340 Z"
+        fill="white"/>
+
+  <!-- Star accent (top center) -->
+  <polygon points="512,150 524,185 562,185 530,207 542,242 512,220 482,242 494,207 462,185 500,185"
+           fill="#C8102E" opacity="0.9"/>
+</svg>
