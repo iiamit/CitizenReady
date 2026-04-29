@@ -438,7 +438,7 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
 .learning-card .answer-text {
   font-size: 20px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-answer-text);
   margin-bottom: 4px;
   line-height: 1.4;
 }

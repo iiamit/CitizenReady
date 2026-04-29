@@ -14,8 +14,7 @@ const root = document.getElementById('app-root');
 
 // ── Theme ──────────────────────────────────────────────────────────────────
 async function applyTheme() {
-  const settings = await getSetting('setup');
-  const theme = settings?.theme ?? 'system';
+  const theme = (await getSetting('theme')) ?? 'system';
   document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-system');
   document.documentElement.classList.add(`theme-${theme}`);
 }
