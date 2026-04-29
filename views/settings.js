@@ -6,7 +6,7 @@ import { MANIFEST } from '../data/content-manifest.js';
 import { isCapacitor } from '../utils/platform.js';
 import { getPermissionStatus, requestPermission, scheduleStudyReminder, cancelAllReminders } from '../utils/notifications.js';
 import { isCloudEnabled, getCurrentUser } from '../utils/sync.js';
-import { setLocale, getCurrentLocale } from '../utils/i18n.js';
+import { t, setLocale, getCurrentLocale } from '../utils/i18n.js';
 
 export async function render(el) {
   const settings = (await getSetting('setup')) ?? {};
@@ -16,16 +16,16 @@ export async function render(el) {
 
   el.innerHTML = `
     <div style="padding:16px 0 60px;">
-      <h1 style="font-family:var(--font-display);font-size:22px;margin-bottom:4px;">Settings</h1>
-      <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:20px;">Customize your study experience</p>
+      <h1 style="font-family:var(--font-display);font-size:22px;margin-bottom:4px;">${t('settings.title')}</h1>
+      <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:20px;">${t('settings.subtitle')}</p>
 
       <!-- Location -->
       <div class="settings-section">
-        <div class="settings-section-title">Location</div>
+        <div class="settings-section-title">${t('settings.location.title')}</div>
         <div class="settings-row">
           <div class="settings-row-label">
-            <div class="settings-row-name">State or Territory</div>
-            <div class="settings-row-desc">Personalizes senator and governor questions</div>
+            <div class="settings-row-name">${t('settings.location.state')}</div>
+            <div class="settings-row-desc">${t('settings.location.state.hint')}</div>
           </div>
           <select id="state-select" class="settings-select" aria-label="Select your state or territory">
             <option value="">Select state…</option>
@@ -37,12 +37,12 @@ export async function render(el) {
 
       <!-- Study preferences -->
       <div class="settings-section">
-        <div class="settings-section-title">Study Preferences</div>
+        <div class="settings-section-title">${t('settings.study.title')}</div>
 
         <div class="settings-row">
           <div class="settings-row-label">
-            <div class="settings-row-name">65/20 Exemption Mode</div>
-            <div class="settings-row-desc">For applicants 65+ who have been a permanent resident ≥ 20 years — focuses on 20 starred questions only</div>
+            <div class="settings-row-name">${t('settings.study.exemption')}</div>
+            <div class="settings-row-desc">${t('settings.study.exemption.hint')}</div>
           </div>
           <label class="toggle" aria-label="Toggle 65/20 exemption mode">
             <input type="checkbox" id="exemption-toggle" ${settings.exemption65_20 ? 'checked' : ''}>
@@ -52,8 +52,8 @@ export async function render(el) {
 
         <div class="settings-row">
           <div class="settings-row-label">
-            <div class="settings-row-name">Daily Goal</div>
-            <div class="settings-row-desc">How many minutes per day you want to study</div>
+            <div class="settings-row-name">${t('settings.study.goal')}</div>
+            <div class="settings-row-desc">${t('settings.study.goal.hint')}</div>
           </div>
           <select id="goal-select" class="settings-select" aria-label="Select daily study goal">
             <option value="10" ${(settings.dailyGoalMinutes ?? 15) === 10 ? 'selected' : ''}>10 min/day</option>
@@ -65,8 +65,8 @@ export async function render(el) {
 
         <div class="settings-row">
           <div class="settings-row-label">
-            <div class="settings-row-name">Interview Date</div>
-            <div class="settings-row-desc">Optional — enables pacing alerts on the dashboard</div>
+            <div class="settings-row-name">${t('settings.study.interview')}</div>
+            <div class="settings-row-desc">${t('settings.study.interview.hint')}</div>
           </div>
           <input type="date" id="interview-date" class="settings-input" value="${settings.interviewDate ?? ''}" aria-label="Interview date">
         </div>
@@ -74,27 +74,27 @@ export async function render(el) {
 
       <!-- Appearance -->
       <div class="settings-section">
-        <div class="settings-section-title">Appearance</div>
+        <div class="settings-section-title">${t('settings.appearance.title')}</div>
         <div class="settings-row">
           <div class="settings-row-label">
-            <div class="settings-row-name">Theme</div>
+            <div class="settings-row-name">${t('settings.appearance.theme')}</div>
             <div class="settings-row-desc">Choose light, dark, or follow system setting</div>
           </div>
           <select id="theme-select" class="settings-select" aria-label="Select theme">
-            <option value="system" ${theme === 'system' ? 'selected' : ''}>System default</option>
-            <option value="light" ${theme === 'light' ? 'selected' : ''}>Light</option>
-            <option value="dark" ${theme === 'dark' ? 'selected' : ''}>Dark</option>
+            <option value="system" ${theme === 'system' ? 'selected' : ''}>${t('settings.theme.system')}</option>
+            <option value="light" ${theme === 'light' ? 'selected' : ''}>${t('settings.theme.light')}</option>
+            <option value="dark" ${theme === 'dark' ? 'selected' : ''}>${t('settings.theme.dark')}</option>
           </select>
         </div>
       </div>
 
       <!-- Language -->
       <div class="settings-section">
-        <div class="settings-section-title">Language</div>
+        <div class="settings-section-title">Language / Idioma</div>
         <div class="settings-row">
           <div class="settings-row-label">
-            <div class="settings-row-name">Language / Idioma</div>
-            <div class="settings-row-desc">App interface language</div>
+            <div class="settings-row-name">${t('settings.appearance.language')}</div>
+            <div class="settings-row-desc">App interface language / Idioma de la app</div>
           </div>
           <select id="language-select" class="settings-select" aria-label="Select language">
             <option value="en" ${currentLocale === 'en' ? 'selected' : ''}>English</option>
@@ -139,7 +139,7 @@ export async function render(el) {
 
       <!-- Content updates -->
       <div class="settings-section">
-        <div class="settings-section-title">Content Updates</div>
+        <div class="settings-section-title">${t('settings.content.title')}</div>
         <div class="settings-row" style="align-items:flex-start;flex-direction:column;gap:8px;">
           <div style="display:flex;width:100%;align-items:center;justify-content:space-between;">
             <div class="settings-row-label">
@@ -151,7 +151,7 @@ export async function render(el) {
               <div class="settings-row-desc">${versions.stateDataVersion}</div>
             </div>
           </div>
-          <button class="btn btn-secondary" id="check-updates-btn" style="width:100%;">Check for Updates</button>
+          <button class="btn btn-secondary" id="check-updates-btn" style="width:100%;">${t('settings.content.check')}</button>
           <div id="update-status" style="font-size:12px;color:var(--color-text-secondary);text-align:center;width:100%;display:none;"></div>
         </div>
         ${lastReleaseNotes ? `
@@ -163,11 +163,11 @@ export async function render(el) {
 
       <!-- Data management -->
       <div class="settings-section">
-        <div class="settings-section-title">Data</div>
+        <div class="settings-section-title">${t('settings.data.title')}</div>
 
         <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px;">
-          <button class="btn btn-secondary" id="export-btn">Export My Data</button>
-          <button class="btn btn-secondary" id="import-btn">Import Data</button>
+          <button class="btn btn-secondary" id="export-btn">${t('settings.data.export')}</button>
+          <button class="btn btn-secondary" id="import-btn">${t('settings.data.import')}</button>
           <input type="file" id="import-file" accept=".json" style="display:none;" aria-label="Import data file">
         </div>
 
@@ -175,18 +175,18 @@ export async function render(el) {
 
         <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:8px;padding-top:8px;">
           <div style="font-size:13px;color:var(--color-text-secondary);padding:0 16px 4px;">
-            Erases all progress, scores, and study history. Cannot be undone.
+            ${t('settings.data.reset.hint')}
           </div>
           <div style="padding:0 16px;">
-            <input type="text" id="reset-confirm" placeholder='Type RESET to confirm' class="settings-input" style="width:100%;margin-bottom:8px;" aria-label="Type RESET to confirm data reset">
-            <button class="btn btn-error" id="reset-btn" disabled style="width:100%;">Reset All Data</button>
+            <input type="text" id="reset-confirm" placeholder='${t('settings.data.reset.placeholder')}' class="settings-input" style="width:100%;margin-bottom:8px;" aria-label="${t('settings.data.reset.placeholder')}">
+            <button class="btn btn-error" id="reset-btn" disabled style="width:100%;">${t('settings.data.reset.cta')}</button>
           </div>
         </div>
       </div>
 
       <!-- About -->
       <div class="settings-section">
-        <div class="settings-section-title">About</div>
+        <div class="settings-section-title">${t('settings.about.title')}</div>
         <div style="padding:12px 16px;font-size:13px;line-height:1.6;color:var(--color-text-secondary);">
           <p style="margin:0 0 8px;"><strong style="color:var(--color-text);">CitizenReady</strong> — US Naturalization Test Prep</p>
           <p style="margin:0 0 8px;">Based on the official USCIS 128-question civics test (Form M-1778, 09/25).</p>
@@ -253,24 +253,24 @@ export async function render(el) {
     const btn = el.querySelector('#check-updates-btn');
     const status = el.querySelector('#update-status');
     btn.disabled = true;
-    btn.textContent = 'Checking…';
+    btn.textContent = t('settings.content.checking');
     status.style.display = 'block';
-    status.textContent = 'Connecting to update server…';
+    status.textContent = t('settings.content.checking');
     try {
       await checkForUpdates(true); // force = true
       if (updateAppliedThisSession) {
-        status.textContent = '✓ Update applied! Reload the app to see new content.';
+        status.textContent = t('settings.content.updated');
         status.style.color = 'var(--color-success)';
       } else {
-        status.textContent = '✓ You\'re up to date.';
+        status.textContent = t('settings.content.current');
         status.style.color = 'var(--color-success)';
       }
     } catch {
-      status.textContent = 'Could not reach update server. Check your connection.';
+      status.textContent = t('settings.content.error');
       status.style.color = 'var(--color-error)';
     }
     btn.disabled = false;
-    btn.textContent = 'Check for Updates';
+    btn.textContent = t('settings.content.check');
   });
 
   // Language

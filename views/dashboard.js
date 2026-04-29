@@ -4,6 +4,7 @@ import { getNextCategory, CATEGORIES } from '../utils/scheduler.js';
 import { getAllQuestions, getAllCategories } from '../utils/db.js';
 import { getQuestionsForCategory } from '../utils/storage.js';
 import { isWeb } from '../utils/platform.js';
+import { t } from '../utils/i18n.js';
 
 export async function render(el) {
   const settings = (await getSetting('setup')) ?? {};
@@ -55,19 +56,19 @@ export async function render(el) {
     <div class="install-banner fade-in" id="install-banner">
       <div style="font-size:28px;" aria-hidden="true">📱</div>
       <div class="install-banner-text">
-        <div class="install-banner-title">Add CitizenReady to your home screen</div>
-        <div class="install-banner-sub">Study offline, anytime.</div>
+        <div class="install-banner-title">${t('dashboard.install.title')}</div>
+        <div class="install-banner-sub">${t('dashboard.install.subtitle')}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-        <button class="btn btn-primary" id="install-cta" style="padding:6px 14px;font-size:13px;">Install</button>
-        <button class="btn btn-ghost" id="install-dismiss" style="padding:4px 8px;font-size:12px;">Not now</button>
+        <button class="btn btn-primary" id="install-cta" style="padding:6px 14px;font-size:13px;">${t('dashboard.install.cta')}</button>
+        <button class="btn btn-ghost" id="install-dismiss" style="padding:4px 8px;font-size:12px;">${t('dashboard.install.dismiss')}</button>
       </div>
     </div>
     ` : ''}
     <div class="dashboard-header fade-in stagger-1">
       <div class="streak-block" aria-label="${streak} day study streak">
         <span class="streak-icon" aria-hidden="true">🔥</span>
-        <span>${streak}-day streak</span>
+        <span>${t('dashboard.streak', {n: streak})}</span>
       </div>
       <div class="readiness-block">
         ${gaugeHTML(score, band)}
@@ -78,19 +79,19 @@ export async function render(el) {
 
     <div class="action-cards fade-in stagger-2">
       <div class="action-card">
-        <div class="card-title">Today's Lesson</div>
+        <div class="card-title">${t('dashboard.lesson.title')}</div>
         <div class="card-subject">${nextCat ? nextCat.name : 'All categories complete'}</div>
         <div class="card-meta">${nextCat ? `${getQuestionsForCategory(nextCat.id, exemption).length} questions` : ''}</div>
         <button class="btn btn-primary btn-full" id="start-lesson-btn" ${!nextCat ? 'disabled' : ''}>
-          Start Lesson
+          ${t('dashboard.lesson.cta')}
         </button>
       </div>
       <div class="action-card">
-        <div class="card-title">Today's Drill</div>
-        <div class="card-subject">${dueCount > 0 ? `${dueCount} cards due` : 'No cards due'}</div>
+        <div class="card-title">${t('dashboard.drill.title')}</div>
+        <div class="card-subject">${dueCount > 0 ? t('dashboard.drill.due', {n: dueCount}) : t('dashboard.drill.none')}</div>
         <div class="card-meta">${dueCount > 0 ? 'Flashcard review' : 'Check back tomorrow'}</div>
         <button class="btn btn-primary btn-full" id="start-drill-btn" ${dueCount === 0 ? 'disabled' : ''}>
-          Start Drill
+          ${t('dashboard.drill.cta')}
         </button>
       </div>
     </div>
@@ -99,10 +100,10 @@ export async function render(el) {
     <div class="card fade-in stagger-3" style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div>
-          <div class="label">Weak Areas</div>
-          <div style="font-weight:700;margin-top:2px;">${weak.length} question${weak.length !== 1 ? 's' : ''} need review</div>
+          <div class="label">${t('dashboard.weak.title')}</div>
+          <div style="font-weight:700;margin-top:2px;">${t('dashboard.weak.subtitle', {n: weak.length})}</div>
         </div>
-        <a href="#progress" class="btn btn-ghost" style="flex-shrink:0;padding:8px 14px;font-size:13px;">Review Now</a>
+        <a href="#progress" class="btn btn-ghost" style="flex-shrink:0;padding:8px 14px;font-size:13px;">${t('dashboard.weak.cta')}</a>
       </div>
     </div>
     ` : ''}
@@ -119,8 +120,9 @@ export async function render(el) {
   cats.forEach(cat => {
     const dbCat = dbCatMap[cat.id];
     const mastery = dbCat?.masteryScore ?? 0;
-    const status = !dbCat?.lessonStarted ? 'Not Started' : mastery >= 0.8 ? 'Mastered' : 'In Progress';
-    const chipClass = status === 'Mastered' ? 'chip-green' : status === 'In Progress' ? 'chip-amber' : 'chip-neutral';
+    const statusKey = !dbCat?.lessonStarted ? 'progress.status.notstarted' : mastery >= 0.8 ? 'progress.status.mastered' : 'progress.status.inprogress';
+    const status = t(statusKey);
+    const chipClass = statusKey === 'progress.status.mastered' ? 'chip-green' : statusKey === 'progress.status.inprogress' ? 'chip-amber' : 'chip-neutral';
 
     const card = document.createElement('div');
     card.className = 'category-card';
@@ -174,7 +176,7 @@ function gaugeHTML(score, band) {
           stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}" />
       </svg>
       <div class="gauge-score" style="margin-top:-12px;">${score}%</div>
-      <div class="gauge-label">${band.label}</div>
+      <div class="gauge-label">${t(band.key)}</div>
     </div>
   `;
 }

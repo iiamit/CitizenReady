@@ -2,7 +2,7 @@ import { openDB, getSetting, putSetting } from './utils/db.js';
 import { loadMergedData } from './utils/storage.js';
 import { checkForUpdates, updateAppliedThisSession } from './utils/updater.js';
 import { isCapacitor, isAndroid } from './utils/platform.js';
-import { loadLocale, getCurrentLocale } from './utils/i18n.js';
+import { t, loadLocale, getCurrentLocale } from './utils/i18n.js';
 import { render as renderOnboarding } from './views/onboarding.js';
 import { render as renderDashboard } from './views/dashboard.js';
 import { render as renderLesson } from './views/lesson.js';
@@ -22,11 +22,11 @@ async function applyTheme() {
 
 // ── Navigation ─────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { hash: '#dashboard', label: 'Home',     icon: homeIcon() },
-  { hash: '#lesson',    label: 'Lesson',   icon: lessonIcon() },
-  { hash: '#drill',     label: 'Drill',    icon: drillIcon() },
-  { hash: '#progress',  label: 'Progress', icon: progressIcon() },
-  { hash: '#settings',  label: 'Settings', icon: settingsIcon() },
+  { hash: '#dashboard', key: 'nav.home',     icon: homeIcon() },
+  { hash: '#lesson',    key: 'nav.lesson',   icon: lessonIcon() },
+  { hash: '#drill',     key: 'nav.drill',    icon: drillIcon() },
+  { hash: '#progress',  key: 'nav.progress', icon: progressIcon() },
+  { hash: '#settings',  key: 'nav.settings', icon: settingsIcon() },
 ];
 
 function buildNav(activeHash) {
@@ -45,17 +45,17 @@ function buildNav(activeHash) {
     // Bottom nav button
     const btn = document.createElement('button');
     btn.className = 'nav-item' + (activeHash === item.hash ? ' active' : '');
-    btn.setAttribute('aria-label', item.label);
+    btn.setAttribute('aria-label', t(item.key));
     btn.setAttribute('aria-current', activeHash === item.hash ? 'page' : 'false');
-    btn.innerHTML = item.icon + `<span>${item.label}</span>`;
+    btn.innerHTML = item.icon + `<span>${t(item.key)}</span>`;
     btn.addEventListener('click', () => { window.location.hash = item.hash; });
     bottomNav.appendChild(btn);
 
     // Top nav button
     const topBtn = document.createElement('button');
     topBtn.className = 'nav-item' + (activeHash === item.hash ? ' active' : '');
-    topBtn.setAttribute('aria-label', item.label);
-    topBtn.textContent = item.label;
+    topBtn.setAttribute('aria-label', t(item.key));
+    topBtn.textContent = t(item.key);
     topBtn.addEventListener('click', () => { window.location.hash = item.hash; });
     topNav.appendChild(topBtn);
   });
@@ -120,7 +120,7 @@ async function route() {
   if (base !== '#onboarding') {
     const footer = document.createElement('footer');
     footer.className = 'footer-disclaimer';
-    footer.innerHTML = 'CitizenReady is an independent study tool. It is not affiliated with or endorsed by USCIS. Always verify current answers at <a href="https://www.uscis.gov" target="_blank" rel="noopener">uscis.gov</a> before your interview.';
+    footer.innerHTML = t('footer.disclaimer');
     root.appendChild(footer);
   }
 }
@@ -169,7 +169,7 @@ async function init() {
     banner.id = 'offline-banner';
     banner.className = 'notification-banner';
     banner.style.cssText = 'background:#E65100;position:fixed;top:0;left:0;right:0;z-index:9999;border-radius:0;';
-    banner.textContent = "You're offline — your progress is saved locally.";
+    banner.textContent = t('offline.banner');
     document.body.prepend(banner);
   }
   function hideOfflineBanner() {

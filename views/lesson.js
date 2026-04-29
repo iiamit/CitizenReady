@@ -4,6 +4,7 @@ import { CATEGORIES, ensureCategoryRecord, computeMastery } from '../utils/sched
 import { defaultRecord } from '../utils/srs.js';
 import { getAllQuestions } from '../utils/db.js';
 import { getVisual } from '../data/visuals.js';
+import { t, getCurrentLocale } from '../utils/i18n.js';
 import { getAudioUrl } from '../data/audio-manifest.js';
 
 const KC_QUESTION_COUNT = 4;
@@ -56,7 +57,7 @@ export async function render(el, categoryId) {
     phase = 'intro';
     el.innerHTML = `
       <div style="padding:16px 0;">
-        <a href="#dashboard" style="font-size:13px;color:var(--color-text-secondary);">← Back</a>
+        <a href="#dashboard" style="font-size:13px;color:var(--color-text-secondary);">${t('btn.back')}</a>
         <div class="card fade-in" style="margin-top:16px;text-align:center;padding:32px 24px;">
           <div style="font-size:56px;margin-bottom:12px;" aria-hidden="true">${cat.icon}</div>
           <h1 style="font-family:var(--font-display);font-size:26px;margin-bottom:12px;">${cat.name}</h1>
@@ -67,7 +68,7 @@ export async function render(el, categoryId) {
             ${questions.length} question${questions.length !== 1 ? 's' : ''} in this category
             ${exemption ? ' · Starred questions only' : ''}
           </div>
-          <button class="btn btn-primary btn-lg btn-full" id="start-learning-btn">Start Learning →</button>
+          <button class="btn btn-primary btn-lg btn-full" id="start-learning-btn">${t('lesson.start')}</button>
         </div>
       </div>
     `;
@@ -105,63 +106,79 @@ export async function render(el, categoryId) {
             <span style="display:flex;align-items:center;gap:6px;">
               ${q.starred65_20 ? '<span class="star-badge" aria-label="Starred for 65/20 exemption" title="Starred for 65/20 exemption">★</span>' : ''}
               <span class="label">Q.${String(q.number).padStart(3,'0')}</span>
-              ${getAudioUrl(q.number) ? `<button class="audio-btn" id="lesson-audio-btn" aria-label="Play question audio">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play
+              ${(getAudioUrl(q.number, getCurrentLocale()) || 'speechSynthesis' in window) ? `<button class="audio-btn" id="lesson-audio-btn" aria-label="${t('lesson.audio.play')}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </button>` : ''}
             </span>
           </div>
 
           <div class="q-text">${q.question}</div>
           <hr class="divider">
-          <div class="answer-label">Answer${answers.length > 1 ? 's' : ''}:</div>
+          <div class="answer-label">${answers.length > 1 ? t('lesson.answers') : t('lesson.answer')}:</div>
           ${answers.map(a => `<div class="answer-text">${a}</div>`).join('')}
 
           ${q.context ? `
-            <div class="section-label">Why it matters:</div>
+            <div class="section-label">${t('lesson.why')}</div>
             <div class="context-text">${q.context}</div>
           ` : ''}
 
           ${q.memoryTip ? `
-            <div class="section-label">Memory tip:</div>
+            <div class="section-label">${t('lesson.tip')}</div>
             <div class="memory-tip">${q.memoryTip}</div>
           ` : ''}
 
           ${q.stateSpecific ? `
             <div class="verify-link" style="margin-top:12px;">
-              State-specific answer. <a href="https://www.uscis.gov/citizenship/find-study-materials-and-resources/check-for-test-updates" target="_blank" rel="noopener">Verify at uscis.gov</a>
+              ${t('state.specific')} <a href="https://www.uscis.gov/citizenship/find-study-materials-and-resources/check-for-test-updates" target="_blank" rel="noopener">${t('verify.uscis')}</a>
             </div>
           ` : ''}
         </div>
 
         <div style="display:flex;gap:10px;margin-top:16px;">
-          ${cardIndex > 0 ? '<button class="btn btn-ghost" id="prev-btn" style="flex:1;">← Prev</button>' : ''}
-          <button class="btn btn-secondary btn-full" id="next-card-btn">Next →</button>
+          ${cardIndex > 0 ? `<button class="btn btn-ghost" id="prev-btn" style="flex:1;">${t('btn.prev')}</button>` : ''}
+          <button class="btn btn-secondary btn-full" id="next-card-btn">${t('btn.next')}</button>
         </div>
       </div>
     `;
 
-    // Audio player for learning card
+    // Audio player — tries USCIS CDN, falls back to Web Speech API
     const lessonAudioBtn = el.querySelector('#lesson-audio-btn');
     if (lessonAudioBtn) {
-      const audioUrl = getAudioUrl(q.number);
+      const playIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      const stopIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+      const audioUrl = getAudioUrl(q.number, getCurrentLocale());
       let audioEl = null;
+      let usingSpeech = false;
+
+      function resetBtn() {
+        lessonAudioBtn.classList.remove('playing');
+        lessonAudioBtn.innerHTML = playIcon;
+        usingSpeech = false;
+      }
+      function playSpeech() {
+        usingSpeech = true;
+        const utt = new SpeechSynthesisUtterance(q.question);
+        utt.lang = 'en-US';
+        utt.onend = resetBtn;
+        utt.onerror = resetBtn;
+        speechSynthesis.speak(utt);
+        lessonAudioBtn.classList.add('playing');
+        lessonAudioBtn.innerHTML = stopIcon;
+      }
+
       lessonAudioBtn.addEventListener('click', () => {
-        if (!audioEl) {
-          audioEl = new Audio(audioUrl);
-          audioEl.addEventListener('ended', () => {
-            lessonAudioBtn.classList.remove('playing');
-            lessonAudioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play`;
-          });
-        }
-        if (audioEl.paused) {
-          audioEl.play().catch(() => {});
-          lessonAudioBtn.classList.add('playing');
-          lessonAudioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>Pause`;
+        if (usingSpeech) { speechSynthesis.cancel(); resetBtn(); return; }
+        if (audioEl && !audioEl.paused) { audioEl.pause(); audioEl.currentTime = 0; resetBtn(); return; }
+        if (audioUrl) {
+          if (!audioEl) {
+            audioEl = new Audio(audioUrl);
+            audioEl.addEventListener('ended', resetBtn);
+          }
+          audioEl.play()
+            .then(() => { lessonAudioBtn.classList.add('playing'); lessonAudioBtn.innerHTML = stopIcon; })
+            .catch(() => { audioEl = null; playSpeech(); });
         } else {
-          audioEl.pause();
-          audioEl.currentTime = 0;
-          lessonAudioBtn.classList.remove('playing');
-          lessonAudioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play`;
+          playSpeech();
         }
       });
     }
@@ -196,12 +213,12 @@ export async function render(el, categoryId) {
     el.innerHTML = `
       <div style="padding:16px 0;">
         <h2 style="font-family:var(--font-display);margin-bottom:12px;">${cat.name}</h2>
-        <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:16px;">Reference diagram for this category</p>
+        <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:16px;">${t('lesson.visual.title')}</p>
         <div class="visual-container fade-in">
           ${svg}
         </div>
         <button class="btn btn-primary btn-full btn-lg" id="go-kc-btn" style="margin-top:20px;">
-          Take Knowledge Check →
+          ${t('lesson.visual.cta')}
         </button>
       </div>
     `;
@@ -246,7 +263,7 @@ export async function render(el, categoryId) {
           </div>
           <span class="session-progress-label">Question ${kcIndex + 1} of ${kcQuestions.length}</span>
         </div>
-        <div class="label" style="margin-bottom:8px;">Knowledge Check</div>
+        <div class="label" style="margin-bottom:8px;">${t('lesson.kc.title')}</div>
         <div style="font-size:18px;font-weight:600;margin-bottom:20px;line-height:1.4;">${q.question}</div>
         <div id="kc-options">
           ${options.map(opt => `
@@ -326,21 +343,21 @@ export async function render(el, categoryId) {
       <div style="padding:16px 0;">
         <div class="completion-card fade-in">
           <div class="completion-badge" aria-hidden="true">${pct >= 75 ? '🎉' : '📚'}</div>
-          <h2 class="completion-title">Lesson Complete!</h2>
+          <h2 class="completion-title">${t('lesson.complete.title')}</h2>
           <p style="color:var(--color-text-secondary);margin-bottom:20px;">${cat.name}</p>
 
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
             <div style="text-align:center;">
               <div style="font-size:24px;font-weight:700;color:var(--color-primary);">${questions.length}</div>
-              <div class="label">Cards covered</div>
+              <div class="label">${t('lesson.complete.cards')}</div>
             </div>
             <div style="text-align:center;">
               <div style="font-size:24px;font-weight:700;color:${pct >= 75 ? 'var(--color-success)' : 'var(--color-warning)'};">${pct}%</div>
-              <div class="label">KC Score</div>
+              <div class="label">${t('lesson.complete.kc')}</div>
             </div>
             <div style="text-align:center;">
               <div style="font-size:24px;font-weight:700;color:var(--color-primary);">${Math.floor(duration/60)}m</div>
-              <div class="label">Time spent</div>
+              <div class="label">${t('lesson.complete.time')}</div>
             </div>
           </div>
 
@@ -354,8 +371,8 @@ export async function render(el, categoryId) {
           ` : ''}
 
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <button class="btn btn-primary btn-full" id="start-drill-btn">Start Drill →</button>
-            <a href="#dashboard" class="btn btn-ghost btn-full" style="display:flex;align-items:center;justify-content:center;">Done for today</a>
+            <button class="btn btn-primary btn-full" id="start-drill-btn">${t('lesson.complete.drill')}</button>
+            <a href="#dashboard" class="btn btn-ghost btn-full" style="display:flex;align-items:center;justify-content:center;">${t('lesson.complete.done')}</a>
           </div>
         </div>
       </div>

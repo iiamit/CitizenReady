@@ -3,6 +3,7 @@ import { getQuestionsForCategory } from '../utils/storage.js';
 import { CATEGORIES, computeMastery } from '../utils/scheduler.js';
 import { computeReadinessScore, readinessBand } from '../utils/readiness.js';
 import { shareScoreCard } from '../utils/scorecard.js';
+import { t } from '../utils/i18n.js';
 
 export async function render(el) {
   const [dbQuestions, dbCategories] = await Promise.all([
@@ -38,43 +39,43 @@ export async function render(el) {
 
   el.innerHTML = `
     <div style="padding:16px 0 40px;">
-      <h1 style="font-family:var(--font-display);font-size:22px;margin-bottom:4px;">Your Progress</h1>
-      <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:20px;">Track mastery across all 13 categories</p>
+      <h1 style="font-family:var(--font-display);font-size:22px;margin-bottom:4px;">${t('progress.title')}</h1>
+      <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:20px;">${t('progress.subtitle')}</p>
 
       <div class="card fade-in" style="margin-bottom:20px;padding:20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:4px;">Overall Readiness</div>
+            <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:4px;">${t('progress.readiness')}</div>
             <div style="font-size:36px;font-weight:700;color:${band.color};">${score}%</div>
-            <div style="font-size:14px;font-weight:600;color:${band.color};">${band.label}</div>
+            <div style="font-size:14px;font-weight:600;color:${band.color};">${t(band.key)}</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
             <div>
               <div style="font-size:20px;font-weight:700;color:var(--color-primary);">${Math.round(breakdown.coverage * 100)}%</div>
-              <div style="font-size:10px;color:var(--color-text-secondary);">Coverage</div>
+              <div style="font-size:10px;color:var(--color-text-secondary);">${t('progress.coverage')}</div>
             </div>
             <div>
               <div style="font-size:20px;font-weight:700;color:var(--color-primary);">${Math.round(breakdown.mastery * 100)}%</div>
-              <div style="font-size:10px;color:var(--color-text-secondary);">Mastery</div>
+              <div style="font-size:10px;color:var(--color-text-secondary);">${t('progress.mastery')}</div>
             </div>
             <div>
               <div style="font-size:20px;font-weight:700;color:var(--color-primary);">${Math.round(breakdown.kc * 100)}%</div>
-              <div style="font-size:10px;color:var(--color-text-secondary);">KC Score</div>
+              <div style="font-size:10px;color:var(--color-text-secondary);">${t('progress.kc')}</div>
             </div>
           </div>
         </div>
         ${score > 0 ? `<button class="btn btn-secondary" id="share-score-btn" style="width:100%;margin-top:12px;">
-          Share My Score 📤
+          ${t('progress.share')} 📤
         </button>` : ''}
       </div>
 
-      <h2 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px;">Categories</h2>
+      <h2 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px;">${t('progress.categories')}</h2>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
         ${catStats.map(s => buildCategoryCard(s, qMap)).join('')}
       </div>
 
       ${allWeak.length ? `
-        <h2 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px;">Needs More Practice (${allWeak.length})</h2>
+        <h2 style="font-family:var(--font-display);font-size:17px;margin-bottom:12px;">${t('progress.weak.title')} (${allWeak.length})</h2>
         <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px;">
           ${buildWeakList(allWeak, qMap, qCatMap)}
         </div>
@@ -83,7 +84,7 @@ export async function render(el) {
       ${!allWeak.length && dbQuestions.filter(r => r.introduced).length > 0 ? `
         <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:24px;">
           <div style="font-size:36px;margin-bottom:8px;">🏆</div>
-          <div style="font-weight:700;font-size:16px;margin-bottom:4px;">No weak cards right now!</div>
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px;">${t('progress.noweak')}</div>
           <div style="color:var(--color-text-secondary);font-size:13px;">Keep up the daily drills to maintain your mastery.</div>
         </div>
       ` : ''}
@@ -122,13 +123,13 @@ function buildCategoryCard({ cat, qs, rec, mastery, introduced, weakCount }, qMa
 
   let statusLabel, statusColor;
   if (notStarted) {
-    statusLabel = 'Not started';
+    statusLabel = t('progress.status.notstarted');
     statusColor = 'var(--color-text-secondary)';
   } else if (pct >= 70) {
-    statusLabel = 'Mastered';
+    statusLabel = t('progress.status.mastered');
     statusColor = 'var(--color-success)';
   } else {
-    statusLabel = 'In progress';
+    statusLabel = t('progress.status.inprogress');
     statusColor = 'var(--color-warning)';
   }
 
@@ -175,7 +176,7 @@ function buildCategoryCard({ cat, qs, rec, mastery, introduced, weakCount }, qMa
               ${weakCount ? ` · <span style="color:var(--color-warning);">${weakCount} weak</span>` : ''}
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
-              <a href="#lesson/${cat.id}" style="font-size:12px;color:var(--color-primary);">${completed ? 'Re-study' : 'Study'} →</a>
+              <a href="#lesson/${cat.id}" style="font-size:12px;color:var(--color-primary);">${t('progress.review')}</a>
               ${introduced > 0 ? `<button class="cat-expand-btn" data-cat-id="${cat.id}" style="font-size:12px;background:none;border:none;color:var(--color-text-secondary);cursor:pointer;padding:0;">Show questions ▾</button>` : ''}
             </div>
           </div>

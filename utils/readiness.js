@@ -37,10 +37,10 @@ export async function computeReadinessScore(exemption65_20 = false) {
 }
 
 export function readinessBand(score) {
-  if (score < 50) return { label: 'Getting started', color: '#B71C1C' };
-  if (score < 75) return { label: 'Building knowledge', color: '#E65100' };
-  if (score < 90) return { label: 'On track', color: '#2E7D32' };
-  return { label: 'Ready to test', color: '#1A3A5C' };
+  if (score < 50) return { key: 'band.starting', label: 'Getting started', color: '#B71C1C' };
+  if (score < 75) return { key: 'band.building', label: 'Building knowledge', color: '#E65100' };
+  if (score < 90) return { key: 'band.ontrack', label: 'On track', color: '#2E7D32' };
+  return { key: 'band.ready', label: 'Ready to test', color: '#1A3A5C' };
 }
 
 export async function getStreakDays() {

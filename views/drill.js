@@ -3,6 +3,7 @@ import { getQuestions, resolveAnswer } from '../utils/storage.js';
 import { applyRating, defaultRecord, isDue } from '../utils/srs.js';
 import { CATEGORIES, weightedCardQueue } from '../utils/scheduler.js';
 import { isCapacitor } from '../utils/platform.js';
+import { t, getCurrentLocale } from '../utils/i18n.js';
 import { getAudioUrl } from '../data/audio-manifest.js';
 
 const SESSION_TARGET = 20; // max cards per session
@@ -26,9 +27,9 @@ export async function render(el) {
     el.innerHTML = `
       <div class="card fade-in" style="margin-top:32px;text-align:center;padding:40px 24px;">
         <div style="font-size:48px;margin-bottom:12px;">📖</div>
-        <h2 style="font-family:var(--font-display);margin-bottom:8px;">Complete your first lesson to unlock flashcard drills.</h2>
+        <h2 style="font-family:var(--font-display);margin-bottom:8px;">${t('drill.locked.title')}</h2>
         <p style="color:var(--color-text-secondary);margin-bottom:24px;">You need to study at least one lesson before you can drill.</p>
-        <a href="#lesson" class="btn btn-primary">Start a Lesson →</a>
+        <a href="#lesson" class="btn btn-primary">${t('drill.locked.cta')}</a>
       </div>
     `;
     return;
@@ -48,8 +49,8 @@ export async function render(el) {
     el.innerHTML = `
       <div class="card fade-in" style="margin-top:32px;text-align:center;padding:40px 24px;">
         <div style="font-size:48px;margin-bottom:12px;">✅</div>
-        <h2 style="font-family:var(--font-display);margin-bottom:8px;">No cards due today!</h2>
-        <p style="color:var(--color-text-secondary);margin-bottom:24px;">You're all caught up. Come back tomorrow for your next review session.</p>
+        <h2 style="font-family:var(--font-display);margin-bottom:8px;">${t('drill.caught.title')}</h2>
+        <p style="color:var(--color-text-secondary);margin-bottom:24px;">${t('drill.caught.subtitle')}</p>
         <a href="#dashboard" class="btn btn-secondary">Back to Dashboard</a>
       </div>
     `;
@@ -99,13 +100,13 @@ export async function render(el) {
                 <span style="display:flex;align-items:center;gap:6px;">
                   ${q.starred65_20 ? '<span class="star-badge" aria-label="Starred">★</span>' : ''}
                   <span class="label">Q.${String(q.number).padStart(3,'0')}</span>
-                  ${getAudioUrl(q.number) ? `<button class="audio-btn" id="audio-btn" aria-label="Play question audio" title="Play audio" onclick="event.stopPropagation()">
+                  ${(getAudioUrl(q.number, getCurrentLocale()) || 'speechSynthesis' in window) ? `<button class="audio-btn" id="audio-btn" aria-label="${t('drill.audio.play')}" title="${t('drill.audio.play')}" onclick="event.stopPropagation()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   </button>` : ''}
                 </span>
               </div>
               <div class="flashcard-question">${q.question}</div>
-              <div class="flip-hint" aria-hidden="true">Tap to reveal answer</div>
+              <div class="flip-hint" aria-hidden="true">${t('drill.flip.hint')}</div>
             </div>
             <div class="flashcard-face flashcard-back" aria-live="polite">
               <div class="card-meta">
@@ -121,9 +122,9 @@ export async function render(el) {
 
         <div class="rating-buttons-wrap" id="rating-buttons" style="display:none;">
           <div class="rating-buttons">
-            <button class="btn btn-error" id="missed-btn" aria-label="Missed it">Missed it</button>
-            <button class="btn btn-warning" id="almost-btn" aria-label="Almost">Almost</button>
-            <button class="btn btn-success" id="gotit-btn" aria-label="Got it">Got it</button>
+            <button class="btn btn-error" id="missed-btn" aria-label="${t('drill.missed')}">${t('drill.missed')}</button>
+            <button class="btn btn-warning" id="almost-btn" aria-label="${t('drill.almost')}">${t('drill.almost')}</button>
+            <button class="btn btn-success" id="gotit-btn" aria-label="${t('drill.gotit')}">${t('drill.gotit')}</button>
           </div>
         </div>
       </div>
@@ -158,25 +159,39 @@ export async function render(el) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
     });
 
-    // Audio button
+    // Audio button — tries USCIS CDN, falls back to Web Speech API
     const audioBtn = el.querySelector('#audio-btn');
-    let audioEl = null;
     if (audioBtn) {
-      const audioUrl = getAudioUrl(q.number);
+      const playIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      const stopIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+      const audioUrl = getAudioUrl(q.number, getCurrentLocale());
+      let audioEl = null;
+      let usingSpeech = false;
+
+      function resetBtn() { audioBtn.classList.remove('playing'); audioBtn.innerHTML = playIcon; usingSpeech = false; }
+      function playSpeech() {
+        usingSpeech = true;
+        const utt = new SpeechSynthesisUtterance(q.question);
+        utt.lang = 'en-US';
+        utt.onend = resetBtn; utt.onerror = resetBtn;
+        speechSynthesis.speak(utt);
+        audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon;
+      }
+
       audioBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!audioEl) {
-          audioEl = new Audio(audioUrl);
-          audioEl.addEventListener('ended', () => { audioBtn.classList.remove('playing'); audioBtn.querySelector('polygon').setAttribute('points', '5 3 19 12 5 21 5 3'); });
-        }
-        if (audioEl.paused) {
-          audioEl.play().catch(() => {});
-          audioBtn.classList.add('playing');
-          audioBtn.querySelector('polygon').setAttribute('points', '6 4 6 20 M18 4 18 20'); // pause icon hint
+        if (usingSpeech) { speechSynthesis.cancel(); resetBtn(); return; }
+        if (audioEl && !audioEl.paused) { audioEl.pause(); audioEl.currentTime = 0; resetBtn(); return; }
+        if (audioUrl) {
+          if (!audioEl) {
+            audioEl = new Audio(audioUrl);
+            audioEl.addEventListener('ended', resetBtn);
+          }
+          audioEl.play()
+            .then(() => { audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon; })
+            .catch(() => { audioEl = null; playSpeech(); });
         } else {
-          audioEl.pause();
-          audioEl.currentTime = 0;
-          audioBtn.classList.remove('playing');
+          playSpeech();
         }
       });
     }
@@ -262,26 +277,26 @@ export async function render(el) {
       <div style="padding:16px 0;">
         <div class="completion-card fade-in">
           <div class="completion-badge" aria-hidden="true">${correctPct >= 80 ? '🌟' : correctPct >= 60 ? '👍' : '💪'}</div>
-          <h2 class="completion-title">Drill Complete!</h2>
+          <h2 class="completion-title">${t('drill.end.title')}</h2>
 
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:20px 0;">
             <div style="text-align:center;">
               <div style="font-size:26px;font-weight:700;color:var(--color-primary);">${Math.min(reviewed, totalCards)}</div>
-              <div class="label">Cards reviewed</div>
+              <div class="label">${t('drill.end.reviewed')}</div>
             </div>
             <div style="text-align:center;">
               <div style="font-size:26px;font-weight:700;color:${correctPct >= 75 ? 'var(--color-success)' : 'var(--color-warning)'};">${correctPct}%</div>
-              <div class="label">Correct</div>
+              <div class="label">${t('drill.end.correct')}</div>
             </div>
             <div style="text-align:center;">
               <div style="font-size:26px;font-weight:700;color:var(--color-primary);">🔥 ${streak}</div>
-              <div class="label">Day streak</div>
+              <div class="label">${t('drill.end.streak')}</div>
             </div>
           </div>
 
           ${missedQs.length ? `
             <div style="text-align:left;margin-bottom:20px;">
-              <div class="label" style="margin-bottom:8px;">Weakest cards today:</div>
+              <div class="label" style="margin-bottom:8px;">${t('drill.end.weak')}</div>
               ${missedQs.map(q => `
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border);gap:8px;">
                   <div style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${q.question}</div>
@@ -291,7 +306,7 @@ export async function render(el) {
             </div>
           ` : ''}
 
-          <a href="#dashboard" class="btn btn-primary btn-full">Done for today →</a>
+          <a href="#dashboard" class="btn btn-primary btn-full">${t('drill.end.cta')}</a>
         </div>
       </div>
     `;
