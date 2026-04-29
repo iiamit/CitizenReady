@@ -185,31 +185,30 @@ export async function render(el) {
         e.stopPropagation();
         if (usingSpeech) { speechSynthesis.cancel(); resetBtn(); return; }
         if (audioEl && !audioEl.paused) { audioEl.pause(); audioEl.currentTime = 0; resetBtn(); return; }
-        // Pre-create utterance synchronously to preserve iOS gesture context for the fallback
-        let pendingUtt = null;
-        if ('speechSynthesis' in window) {
-          pendingUtt = new SpeechSynthesisUtterance(q.question);
-          pendingUtt.lang = 'en-US';
-          pendingUtt.onend = resetBtn; pendingUtt.onerror = resetBtn;
-        }
-        function playSpeechFallback() {
-          if (!pendingUtt) { resetBtn(); return; }
+
+        function speakText() {
+          if (!('speechSynthesis' in window)) { resetBtn(); return; }
+          speechSynthesis.cancel();
           usingSpeech = true;
-          speechSynthesis.speak(pendingUtt);
+          const utt = new SpeechSynthesisUtterance(q.question);
+          utt.lang = 'en-US'; utt.rate = 0.9;
+          utt.onend = resetBtn; utt.onerror = resetBtn;
+          speechSynthesis.speak(utt);
           audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon;
         }
-        if (audioUrl) {
-          if (!audioEl) {
-            audioEl = new Audio(audioUrl);
-            activeAudioEl = audioEl;
-            audioEl.addEventListener('ended', resetBtn);
-          }
-          audioEl.play()
-            .then(() => { audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon; })
-            .catch(() => { audioEl = null; activeAudioEl = null; playSpeechFallback(); });
-        } else {
-          playSpeechFallback();
+
+        // On Capacitor iOS, CDN audio stalls without error — go straight to speech
+        if (isCapacitor() || !audioUrl) { speakText(); return; }
+
+        if (!audioEl) {
+          audioEl = new Audio(audioUrl);
+          activeAudioEl = audioEl;
+          audioEl.addEventListener('ended', resetBtn);
+          audioEl.addEventListener('error', () => { audioEl = null; activeAudioEl = null; speakText(); });
         }
+        audioEl.play()
+          .then(() => { audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon; })
+          .catch(() => { audioEl = null; activeAudioEl = null; speakText(); });
       });
     }
 

@@ -13,8 +13,8 @@ import { render as renderSettings } from './views/settings.js';
 const root = document.getElementById('app-root');
 
 // ── Theme ──────────────────────────────────────────────────────────────────
-async function applyTheme() {
-  const theme = (await getSetting('theme')) ?? 'system';
+function applyTheme() {
+  const theme = localStorage.getItem('cr_theme') ?? 'system';
   document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-system');
   document.documentElement.classList.add(`theme-${theme}`);
 }
@@ -68,7 +68,7 @@ export function navigate(hash) {
 
 // ── Router ─────────────────────────────────────────────────────────────────
 async function route() {
-  await applyTheme();
+  applyTheme();
 
   const hash = window.location.hash || '#dashboard';
   const [base, param] = hash.split('/');

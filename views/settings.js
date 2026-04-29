@@ -10,7 +10,7 @@ import { t, setLocale, getCurrentLocale } from '../utils/i18n.js';
 
 export async function render(el) {
   const settings = (await getSetting('setup')) ?? {};
-  const theme = (await getSetting('theme')) ?? 'system';
+  const theme = localStorage.getItem('cr_theme') ?? 'system';
   const versions = getBundledVersions();
   const currentLocale = getCurrentLocale();
 
@@ -242,9 +242,9 @@ export async function render(el) {
     await putSetting('setup', newSettings);
   });
 
-  el.querySelector('#theme-select').addEventListener('change', async e => {
+  el.querySelector('#theme-select').addEventListener('change', e => {
     const val = e.target.value;
-    await putSetting('theme', val);
+    localStorage.setItem('cr_theme', val);
     applyTheme(val);
   });
 

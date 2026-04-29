@@ -16,6 +16,9 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 
+  <!-- Apply saved theme before CSS loads to prevent flash -->
+  <script>try{var t=localStorage.getItem('cr_theme');if(t)document.documentElement.classList.add('theme-'+t);}catch(e){}</script>
+
   <!-- Critical CSS inlined for fast first paint -->
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
