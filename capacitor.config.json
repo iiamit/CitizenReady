@@ -14,7 +14,7 @@
       "iosSplashResourceName": "Splash"
     },
     "StatusBar": {
-      "style": "DARK",
+      "style": "LIGHT",
       "backgroundColor": "#1A3A5C",
       "overlaysWebView": false
     },

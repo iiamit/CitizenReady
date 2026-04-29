@@ -43,9 +43,23 @@
   --safe-area-right:  env(safe-area-inset-right, 0px);
 }
 
+/* Force light mode — explicit overrides so iOS dark mode doesn't bleed through */
+:root.theme-light {
+  color-scheme: light;
+  --color-bg:      var(--color-neutral-100);
+  --color-surface: #FFFFFF;
+  --color-border:  var(--color-neutral-200);
+  --color-text:    var(--color-neutral-700);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-heading: var(--color-neutral-900);
+  --color-card-back-bg: #EEF3F8;
+  --color-answer-text:  #1A3A5C;
+}
+
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   :root.theme-system {
+    color-scheme: dark;
     --color-bg:      #0F1F30;
     --color-surface: #1A2E40;
     --color-border:  #2A4060;
@@ -60,6 +74,7 @@
   }
 }
 :root.theme-dark {
+  color-scheme: dark;
   --color-bg:      #0F1F30;
   --color-surface: #1A2E40;
   --color-border:  #2A4060;

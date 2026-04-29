@@ -185,6 +185,19 @@ export async function render(el) {
         e.stopPropagation();
         if (usingSpeech) { speechSynthesis.cancel(); resetBtn(); return; }
         if (audioEl && !audioEl.paused) { audioEl.pause(); audioEl.currentTime = 0; resetBtn(); return; }
+        // Pre-create utterance synchronously to preserve iOS gesture context for the fallback
+        let pendingUtt = null;
+        if ('speechSynthesis' in window) {
+          pendingUtt = new SpeechSynthesisUtterance(q.question);
+          pendingUtt.lang = 'en-US';
+          pendingUtt.onend = resetBtn; pendingUtt.onerror = resetBtn;
+        }
+        function playSpeechFallback() {
+          if (!pendingUtt) { resetBtn(); return; }
+          usingSpeech = true;
+          speechSynthesis.speak(pendingUtt);
+          audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon;
+        }
         if (audioUrl) {
           if (!audioEl) {
             audioEl = new Audio(audioUrl);
@@ -193,9 +206,9 @@ export async function render(el) {
           }
           audioEl.play()
             .then(() => { audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon; })
-            .catch(() => { audioEl = null; activeAudioEl = null; playSpeech(); });
+            .catch(() => { audioEl = null; activeAudioEl = null; playSpeechFallback(); });
         } else {
-          playSpeech();
+          playSpeechFallback();
         }
       });
     }

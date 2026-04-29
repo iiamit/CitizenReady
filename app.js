@@ -140,7 +140,7 @@ async function init() {
   // Capacitor native setup
   if (isCapacitor()) {
     import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-      StatusBar.setStyle({ style: Style.Dark });
+      StatusBar.setStyle({ style: Style.Light });
       if (isAndroid()) StatusBar.setBackgroundColor({ color: '#1A3A5C' });
     }).catch(() => {});
 
