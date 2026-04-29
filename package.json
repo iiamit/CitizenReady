@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "node scripts/generate-icons.mjs && vite build",
+    "dev": "node scripts/download-audio.mjs && vite",
+    "build": "node scripts/generate-icons.mjs && node scripts/download-audio.mjs && vite build",
     "preview": "vite preview",
     "generate-icons": "node scripts/generate-icons.mjs",
     "cap:sync": "npm run build && npx cap sync",

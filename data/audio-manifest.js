@@ -1,13 +1,10 @@
-// USCIS audio files for the civics test questions.
-// The audio tracks on uscis.gov were recorded for the original 2008 100-question test.
-// The app uses the 2025 128-question test, which renumbered and added questions.
-// AUDIO_TRACK_MAP translates 2025 question numbers → 2008 audio track numbers.
-// 2025 questions with no matching 2008 audio fall back to Web Speech API in the UI.
+// USCIS civics test audio — original 2008 100-question recordings.
+// The 2025 test renumbered questions, so AUDIO_TRACK_MAP translates
+// 2025 question numbers → 2008 track numbers.
+// Questions with no matching track fall back to Web Speech API in the UI.
 //
-// English:  Track%20{01-99}.mp3, special case 100.mp3.mp3 for track 100
-// Spanish:  Question_{01-100}_Spanish.mp3
-
-const BASE = 'https://www.uscis.gov/sites/default/files/document/audio';
+// MP3 files are downloaded at build time by scripts/download-audio.mjs
+// and served from /audio/track-NN.mp3.
 
 // 2025 question number → 2008 audio track number
 const AUDIO_TRACK_MAP = {
@@ -75,15 +72,8 @@ const AUDIO_TRACK_MAP = {
   123: 98,  // name of the national anthem
 };
 
-// These specific tracks use underscore in the filename instead of %20
-const UNDERSCORE_TRACKS = new Set([28, 29, 39, 40, 46, 47, 51]);
-
-export function getAudioUrl(number, lang = 'en') {
-  const track = AUDIO_TRACK_MAP[number] ?? null;
+export function getAudioUrl(questionNumber) {
+  const track = AUDIO_TRACK_MAP[questionNumber] ?? null;
   if (!track) return null;
-  const pad = String(track).padStart(2, '0');
-  if (lang === 'es') return `${BASE}/Question_${pad}_Spanish.mp3`;
-  if (track === 100) return `${BASE}/100.mp3.mp3`;
-  if (UNDERSCORE_TRACKS.has(track)) return `${BASE}/Track_${track}.mp3`;
-  return `${BASE}/Track%20${pad}.mp3`;
+  return `/audio/track-${String(track).padStart(2, '0')}.mp3`;
 }

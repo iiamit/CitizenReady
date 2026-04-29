@@ -6,7 +6,6 @@ import { getAllQuestions } from '../utils/db.js';
 import { getVisual } from '../data/visuals.js';
 import { t, getCurrentLocale } from '../utils/i18n.js';
 import { getAudioUrl } from '../data/audio-manifest.js';
-import { isCapacitor } from '../utils/platform.js';
 
 const KC_QUESTION_COUNT = 4;
 
@@ -111,7 +110,7 @@ export async function render(el, categoryId) {
             <span style="display:flex;align-items:center;gap:6px;">
               ${q.starred65_20 ? '<span class="star-badge" aria-label="Starred for 65/20 exemption" title="Starred for 65/20 exemption">★</span>' : ''}
               <span class="label">Q.${String(q.number).padStart(3,'0')}</span>
-              ${(getAudioUrl(q.number, getCurrentLocale()) || 'speechSynthesis' in window) ? `<button class="audio-btn" id="lesson-audio-btn" aria-label="${t('lesson.audio.play')}">
+              ${(getAudioUrl(q.number) || 'speechSynthesis' in window) ? `<button class="audio-btn" id="lesson-audio-btn" aria-label="${t('lesson.audio.play')}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </button>` : ''}
             </span>
@@ -151,7 +150,7 @@ export async function render(el, categoryId) {
     if (lessonAudioBtn) {
       const playIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
       const stopIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
-      const audioUrl = getAudioUrl(q.number, getCurrentLocale());
+      const audioUrl = getAudioUrl(q.number);
       let audioEl = null;
       let usingSpeech = false;
 
@@ -187,8 +186,7 @@ export async function render(el, categoryId) {
           lessonAudioBtn.innerHTML = stopIcon;
         }
 
-        // On Capacitor iOS, CDN audio stalls without error — go straight to speech
-        if (isCapacitor() || !audioUrl) { speakText(); return; }
+        if (!audioUrl) { speakText(); return; }
 
         if (!audioEl) {
           audioEl = new Audio(audioUrl);

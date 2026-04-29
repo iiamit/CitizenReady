@@ -28,7 +28,8 @@ node_modules/
 ios/
 android/
 
-# Generated assets (recreated by npm run generate-icons)
+# Generated assets (recreated at build time)
 public/icons/
+public/audio/
 resources/android/
 resources/ios/
