@@ -50,6 +50,7 @@ export async function render(el, categoryId) {
   let kcQuestions = [];
   let kcResults = [];
   const sessionStart = Date.now();
+  let activeAudioEl = null; // tracks current CDN audio so navigation can stop it
 
   function getPhase() { return phase; }
 
@@ -82,6 +83,9 @@ export async function render(el, categoryId) {
 
   async function showLearningCard() {
     phase = 'learning';
+    // Stop any audio still playing from the previous card
+    speechSynthesis.cancel();
+    if (activeAudioEl) { activeAudioEl.pause(); activeAudioEl.currentTime = 0; activeAudioEl = null; }
     if (cardIndex >= questions.length) {
       await showVisual();
       return;
@@ -172,6 +176,7 @@ export async function render(el, categoryId) {
         if (audioUrl) {
           if (!audioEl) {
             audioEl = new Audio(audioUrl);
+            activeAudioEl = audioEl;
             audioEl.addEventListener('ended', resetBtn);
           }
           audioEl.play()

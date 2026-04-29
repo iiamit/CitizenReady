@@ -65,6 +65,7 @@ export async function render(el) {
   let isFlipped = false;
   const sessionStart = Date.now();
   const totalCards = sessionQueue.length;
+  let activeAudioEl = null;
 
   function getCurrentCard() { return sessionQueue[currentIdx]; }
 
@@ -73,6 +74,8 @@ export async function render(el) {
       await showSessionEnd();
       return;
     }
+    speechSynthesis.cancel();
+    if (activeAudioEl) { activeAudioEl.pause(); activeAudioEl.currentTime = 0; activeAudioEl = null; }
     isFlipped = false;
     const q = getCurrentCard();
     const dbRec = qMap[q.id] ?? defaultRecord(q.id);
@@ -185,11 +188,12 @@ export async function render(el) {
         if (audioUrl) {
           if (!audioEl) {
             audioEl = new Audio(audioUrl);
+            activeAudioEl = audioEl;
             audioEl.addEventListener('ended', resetBtn);
           }
           audioEl.play()
             .then(() => { audioBtn.classList.add('playing'); audioBtn.innerHTML = stopIcon; })
-            .catch(() => { audioEl = null; playSpeech(); });
+            .catch(() => { audioEl = null; activeAudioEl = null; playSpeech(); });
         } else {
           playSpeech();
         }
