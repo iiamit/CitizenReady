@@ -4,6 +4,7 @@
 # Source documents (not part of the app)
 *.pdf
 citizenship-app-spec.md
+v2-plan.md
 
 # OS
 .DS_Store
