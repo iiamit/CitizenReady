@@ -64,8 +64,12 @@ export default {
   'lesson.tip': 'Tip para recordar:',
   'lesson.kc.title': 'Verificación de conocimiento',
   'lesson.visual.title': 'Diagrama de referencia',
+  'lesson.visual.photos': 'Fotos históricas',
   'lesson.visual.cta': 'Hacer verificación →',
   'lesson.audio.play': 'Escuchar pregunta en audio',
+  'story.phase': 'Historia del capítulo',
+  'story.skip': 'Omitir',
+  'story.continue': 'Continuar a tarjetas de estudio →',
 
   // Drill
   'drill.flip.hint': 'Toca para revelar la respuesta',

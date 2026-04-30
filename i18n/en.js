@@ -64,8 +64,12 @@ export default {
   'lesson.tip': 'Memory tip:',
   'lesson.kc.title': 'Knowledge Check',
   'lesson.visual.title': 'Reference Diagram',
+  'lesson.visual.photos': 'Historical Photos',
   'lesson.visual.cta': 'Take Knowledge Check →',
   'lesson.audio.play': 'Play question audio',
+  'story.phase': 'Chapter Story',
+  'story.skip': 'Skip',
+  'story.continue': 'Continue to Study Cards →',
 
   // Drill
   'drill.flip.hint': 'Tap to reveal answer',

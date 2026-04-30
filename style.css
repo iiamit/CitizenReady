@@ -809,3 +809,102 @@ input:focus, select:focus { outline: 2px solid var(--color-primary); outline-off
 .install-banner-title { font-weight: 700; font-size: 14px; }
 .install-banner-sub { font-size: 12px; color: var(--color-text-secondary); }
 
+/* ===== Narrative / Story Phase ===== */
+.narrative-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  box-shadow: var(--shadow);
+}
+.narrative-chapter-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--color-heading);
+  margin-bottom: 20px;
+  line-height: 1.3;
+}
+.narrative-section { margin-bottom: 4px; }
+.narrative-section-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 10px;
+  line-height: 1.35;
+}
+.narrative-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+.narrative-image-wrap {
+  margin: 12px 0 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.narrative-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.image-caption {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  background: var(--color-neutral-100);
+  padding: 7px 10px;
+  margin: 0;
+  line-height: 1.45;
+}
+.image-credit { opacity: 0.75; }
+.narrative-divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 20px 0;
+}
+.narrative-cta {
+  position: sticky;
+  bottom: calc(var(--nav-height) + var(--safe-area-bottom));
+  padding: 12px 0 4px;
+  background: linear-gradient(transparent, var(--color-bg) 35%);
+}
+
+/* ===== Photo Gallery (Visual Phase) ===== */
+.photo-gallery-section { margin-bottom: 20px; }
+.photo-gallery {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.photo-gallery::-webkit-scrollbar { height: 4px; }
+.photo-gallery::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+.gallery-item {
+  flex: 0 0 200px;
+  scroll-snap-align: start;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--color-border);
+}
+.gallery-img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  display: block;
+}
+.gallery-caption {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  padding: 6px 8px;
+  margin: 0;
+  line-height: 1.4;
+}
+.visual-diagram-section { margin-bottom: 4px; }
+
