@@ -4,6 +4,7 @@ import { CATEGORIES, ensureCategoryRecord, computeMastery } from '../utils/sched
 import { defaultRecord } from '../utils/srs.js';
 import { getAllQuestions } from '../utils/db.js';
 import { getVisual } from '../data/visuals.js';
+import { getNarrative, getVisualPhotos } from '../data/narratives.js';
 import { t, getCurrentLocale } from '../utils/i18n.js';
 import { getAudioUrl } from '../data/audio-manifest.js';
 
@@ -73,12 +74,62 @@ export async function render(el, categoryId) {
         </div>
       </div>
     `;
-    el.querySelector('#start-learning-btn').addEventListener('click', () => showLearningCard());
+    el.querySelector('#start-learning-btn').addEventListener('click', () => showStory());
     // Mark lesson started
     if (!catRecord.lessonStarted) {
       catRecord.lessonStarted = true;
       await putCategory(catRecord);
     }
+  }
+
+  async function showStory() {
+    phase = 'story';
+    const narrative = getNarrative(cat.id);
+
+    if (!narrative || !narrative.sections || !narrative.sections.length) {
+      await showLearningCard();
+      return;
+    }
+
+    const base = import.meta.env.BASE_URL;
+
+    el.innerHTML = `
+      <div style="padding:16px 0 80px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span class="label">${t('story.phase')}</span>
+          <button class="btn btn-ghost btn-xs" id="skip-story-btn">${t('story.skip')}</button>
+        </div>
+
+        <div class="narrative-card fade-in">
+          <h2 class="narrative-chapter-title">${cat.name}</h2>
+
+          ${narrative.sections.map((section, i) => `
+            ${i > 0 ? '<hr class="narrative-divider">' : ''}
+            <div class="narrative-section">
+              <h3 class="narrative-section-title">${section.title}</h3>
+              ${section.image ? `
+                <div class="narrative-image-wrap">
+                  <img src="${base}${section.image.src}"
+                       alt="${section.image.caption}"
+                       class="narrative-image"
+                       loading="lazy"
+                       onerror="this.closest('.narrative-image-wrap').style.display='none'">
+                  <p class="image-caption">${section.image.caption} <span class="image-credit">— ${section.image.credit}</span></p>
+                </div>
+              ` : ''}
+              ${section.body.map(para => `<p class="narrative-body">${para}</p>`).join('')}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="narrative-cta">
+          <button class="btn btn-primary btn-lg btn-full" id="story-continue-btn">${t('story.continue')}</button>
+        </div>
+      </div>
+    `;
+
+    el.querySelector('#skip-story-btn').addEventListener('click', () => showLearningCard());
+    el.querySelector('#story-continue-btn').addEventListener('click', () => showLearningCard());
   }
 
   async function showLearningCard() {
@@ -226,14 +277,42 @@ export async function render(el, categoryId) {
   async function showVisual() {
     phase = 'visual';
     const svg = getVisual(cat.id);
+    const photos = getVisualPhotos(cat.id);
+    const base = import.meta.env.BASE_URL;
+    const historicalCats = new Set(['colonial', 'civil-war', 'recent-history', 'symbols-holidays']);
+    const isHistorical = historicalCats.has(cat.id);
+
+    const galleryHtml = (photos.length && (isHistorical || !svg)) ? `
+      <div class="photo-gallery-section fade-in">
+        <p class="section-label">${t('lesson.visual.photos')}</p>
+        <div class="photo-gallery" role="list">
+          ${photos.map(p => `
+            <div class="gallery-item" role="listitem">
+              <img src="${base}${p.src}"
+                   alt="${p.caption}"
+                   class="gallery-img"
+                   loading="lazy"
+                   onerror="this.closest('.gallery-item').style.display='none'">
+              <p class="gallery-caption">${p.caption}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    const diagramHtml = svg ? `
+      <div class="visual-diagram-section">
+        ${isHistorical && photos.length ? `<p class="section-label">${t('lesson.visual.title')}</p>` : ''}
+        <div class="visual-container ${isHistorical && photos.length ? '' : 'fade-in'}">
+          ${svg}
+        </div>
+      </div>
+    ` : '';
 
     el.innerHTML = `
       <div style="padding:16px 0;">
         <h2 style="font-family:var(--font-display);margin-bottom:12px;">${cat.name}</h2>
-        <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:16px;">${t('lesson.visual.title')}</p>
-        <div class="visual-container fade-in">
-          ${svg}
-        </div>
+        ${isHistorical ? galleryHtml + diagramHtml : diagramHtml + galleryHtml}
         <button class="btn btn-primary btn-full btn-lg" id="go-kc-btn" style="margin-top:20px;">
           ${t('lesson.visual.cta')}
         </button>
