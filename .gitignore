@@ -5,6 +5,7 @@
 *.pdf
 citizenship-app-spec.md
 v2-plan.md
+PROJECT.md
 
 # OS
 .DS_Store
