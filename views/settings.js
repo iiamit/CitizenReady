@@ -5,7 +5,6 @@ import { getBundledVersions } from '../utils/storage.js';
 import { MANIFEST } from '../data/content-manifest.js';
 import { isCapacitor } from '../utils/platform.js';
 import { getPermissionStatus, requestPermission, scheduleStudyReminder, cancelAllReminders } from '../utils/notifications.js';
-import { isCloudEnabled, getCurrentUser } from '../utils/sync.js';
 import { t, setLocale, getCurrentLocale } from '../utils/i18n.js';
 
 export async function render(el) {
@@ -128,14 +127,6 @@ export async function render(el) {
         </div>
       </div>
       ` : ''}
-
-      <!-- Account -->
-      <div class="settings-section">
-        <div class="settings-section-title">Account</div>
-        <div id="account-section" style="padding:12px 16px;">
-          ${isCloudEnabled() ? '<div style="color:var(--color-text-secondary);font-size:13px;">Loading…</div>' : '<div style="font-size:13px;color:var(--color-text-secondary);">Cloud sync not configured. See v2-plan.md for Supabase setup instructions.</div>'}
-        </div>
-      </div>
 
       <!-- Content updates -->
       <div class="settings-section">
@@ -318,15 +309,6 @@ export async function render(el) {
       const newSettings = { ...(await getSetting('setup') ?? {}), reminderTime: e.target.value };
       await putSetting('setup', newSettings);
     });
-  }
-
-  // Account section (async load)
-  if (isCloudEnabled()) {
-    const accountSection = el.querySelector('#account-section');
-    if (accountSection) {
-      const { render: renderAuth } = await import('./auth.js');
-      await renderAuth(accountSection);
-    }
   }
 
   // Export
