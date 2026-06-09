@@ -1,5 +1,6 @@
 # Claude Code session data
 .claude/
+CLAUDE.md
 
 # Source documents (not part of the app)
 *.pdf
