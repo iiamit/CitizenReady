@@ -74,7 +74,7 @@ export async function render(el) {
       await showSessionEnd();
       return;
     }
-    speechSynthesis.cancel();
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
     if (activeAudioEl) { activeAudioEl.pause(); activeAudioEl.currentTime = 0; activeAudioEl = null; }
     isFlipped = false;
     const q = getCurrentCard();
