@@ -3,9 +3,10 @@ import { STATE_DATA } from '../data/state-data.js';
 import { checkForUpdates, updateAppliedThisSession, lastReleaseNotes } from '../utils/updater.js';
 import { getBundledVersions } from '../utils/storage.js';
 import { MANIFEST } from '../data/content-manifest.js';
-import { isCapacitor } from '../utils/platform.js';
+import { isCapacitor, isAndroid } from '../utils/platform.js';
 import { getPermissionStatus, requestPermission, scheduleStudyReminder, cancelAllReminders } from '../utils/notifications.js';
 import { t, setLocale, getCurrentLocale } from '../utils/i18n.js';
+import { triggerNativeReview, openPlayStorePage } from '../utils/rating.js';
 
 export async function render(el) {
   const settings = (await getSetting('setup')) ?? {};
@@ -187,11 +188,22 @@ export async function render(el) {
             </a>
           </p>
           <p style="margin:0;font-size:11px;">This app is not affiliated with or endorsed by USCIS or the US government.</p>
+          <div style="margin-top:14px;">
+            <button class="btn btn-secondary" id="rate-app-btn" style="width:100%;">${t('settings.rateAppButton')}</button>
+          </div>
         </div>
       </div>
 
     </div>
   `;
+
+  el.querySelector('#rate-app-btn')?.addEventListener('click', async () => {
+    if (isAndroid()) {
+      await triggerNativeReview();
+    } else {
+      openPlayStorePage();
+    }
+  });
 
   // Show officials note when state is selected
   const stateSelect = el.querySelector('#state-select');

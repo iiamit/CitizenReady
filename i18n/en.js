@@ -162,4 +162,11 @@ export default {
   'state.specific': 'State-specific answer.',
   'footer.disclaimer': 'CitizenReady is an independent study tool. It is not affiliated with or endorsed by USCIS. Always verify current answers at uscis.gov before your interview.',
   'offline.banner': "You're offline — your progress is saved locally.",
+
+  // Rating
+  'settings.rateAppButton': 'Rate CitizenReady on Google Play',
+  'rating.title': 'Enjoying CitizenReady?',
+  'rating.body': "You just completed your 2nd topic — you're making great progress! Help others find us with a quick review.",
+  'rating.confirmBtn': 'Rate the App ⭐',
+  'rating.laterBtn': 'Maybe Later',
 };

@@ -7,6 +7,7 @@ import { getVisual } from '../data/visuals.js';
 import { getNarrative, getVisualPhotos } from '../data/narratives.js';
 import { t, getCurrentLocale } from '../utils/i18n.js';
 import { getAudioUrl } from '../data/audio-manifest.js';
+import { shouldPromptRating, triggerNativeReview, markRatingSolicited } from '../utils/rating.js';
 
 const KC_QUESTION_COUNT = 4;
 
@@ -429,6 +430,36 @@ export async function render(el, categoryId) {
       durationSeconds: duration,
       knowledgeCheckScore: pct / 100,
     });
+
+    // Milestone rating prompt — fires on each lesson completion until user taps "Rate"
+    if (await shouldPromptRating()) {
+      await new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;';
+        overlay.innerHTML = `
+          <div style="background:var(--color-surface);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.2);text-align:center;">
+            <div style="font-size:36px;margin-bottom:12px;">⭐</div>
+            <h3 style="font-family:var(--font-display);font-size:18px;margin-bottom:10px;">${t('rating.title')}</h3>
+            <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:24px;">${t('rating.body')}</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <button class="btn btn-primary btn-full" id="rating-confirm-btn">${t('rating.confirmBtn')}</button>
+              <button class="btn btn-ghost btn-full" id="rating-later-btn">${t('rating.laterBtn')}</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('#rating-confirm-btn').addEventListener('click', async () => {
+          overlay.remove();
+          await markRatingSolicited();
+          await triggerNativeReview();
+          resolve();
+        });
+        overlay.querySelector('#rating-later-btn').addEventListener('click', () => {
+          overlay.remove();
+          resolve();
+        });
+      });
+    }
 
     // Confetti for good scores
     if (pct >= 75 && window.confetti) {

@@ -1,6 +1,6 @@
 {
   "name": "citizenready",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "US Naturalization Test Prep App",
   "private": true,
   "type": "module",
@@ -14,6 +14,7 @@
     "cap:android": "npm run build && npx cap open android"
   },
   "dependencies": {
+    "@capacitor-community/in-app-review": "^6.0.0",
     "@capacitor/app": "^6.0.2",
     "@capacitor/core": "^6.1.2",
     "@capacitor/filesystem": "^6.0.2",

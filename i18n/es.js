@@ -162,4 +162,11 @@ export default {
   'state.specific': 'Respuesta específica del estado.',
   'footer.disclaimer': 'CitizenReady es una herramienta de estudio independiente. No está afiliada ni es avalada por USCIS. Siempre verifica las respuestas actuales en uscis.gov antes de tu entrevista.',
   'offline.banner': 'Sin conexión — tu progreso está guardado localmente.',
+
+  // Rating
+  'settings.rateAppButton': 'Calificar CitizenReady en Google Play',
+  'rating.title': '¿Disfrutando CitizenReady?',
+  'rating.body': 'Acabas de completar tu 2.° tema — ¡buen progreso! Ayuda a otros a encontrarnos con una reseña rápida.',
+  'rating.confirmBtn': 'Calificar la app ⭐',
+  'rating.laterBtn': 'Quizás después',
 };
