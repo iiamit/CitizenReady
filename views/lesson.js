@@ -136,7 +136,7 @@ export async function render(el, categoryId) {
   async function showLearningCard() {
     phase = 'learning';
     // Stop any audio still playing from the previous card
-    speechSynthesis.cancel();
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
     if (activeAudioEl) { activeAudioEl.pause(); activeAudioEl.currentTime = 0; activeAudioEl = null; }
     if (cardIndex >= questions.length) {
       await showVisual();
