@@ -6,7 +6,7 @@ import { MANIFEST } from '../data/content-manifest.js';
 import { isCapacitor, isAndroid } from '../utils/platform.js';
 import { getPermissionStatus, requestPermission, scheduleStudyReminder, cancelAllReminders } from '../utils/notifications.js';
 import { t, setLocale, getCurrentLocale } from '../utils/i18n.js';
-import { triggerNativeReview, openPlayStorePage } from '../utils/rating.js';
+import { triggerNativeReview } from '../utils/rating.js';
 
 export async function render(el) {
   const settings = (await getSetting('setup')) ?? {};
@@ -198,11 +198,7 @@ export async function render(el) {
   `;
 
   el.querySelector('#rate-app-btn')?.addEventListener('click', async () => {
-    if (isAndroid()) {
-      await triggerNativeReview();
-    } else {
-      openPlayStorePage();
-    }
+    await triggerNativeReview();
   });
 
   // Show officials note when state is selected

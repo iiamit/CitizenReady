@@ -164,7 +164,7 @@ export default {
   'offline.banner': 'Sin conexión — tu progreso está guardado localmente.',
 
   // Rating
-  'settings.rateAppButton': 'Calificar CitizenReady en Google Play',
+  'settings.rateAppButton': 'Calificar CitizenReady en el App Store',
   'rating.title': '¿Disfrutando CitizenReady?',
   'rating.body': 'Acabas de completar tu 2.° tema — ¡buen progreso! Ayuda a otros a encontrarnos con una reseña rápida.',
   'rating.confirmBtn': 'Calificar la app ⭐',

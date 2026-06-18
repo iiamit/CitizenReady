@@ -164,7 +164,7 @@ export default {
   'offline.banner': "You're offline — your progress is saved locally.",
 
   // Rating
-  'settings.rateAppButton': 'Rate CitizenReady on Google Play',
+  'settings.rateAppButton': 'Rate CitizenReady on the App Store',
   'rating.title': 'Enjoying CitizenReady?',
   'rating.body': "You just completed your 2nd topic — you're making great progress! Help others find us with a quick review.",
   'rating.confirmBtn': 'Rate the App ⭐',
